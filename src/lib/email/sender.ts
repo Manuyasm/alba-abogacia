@@ -121,3 +121,24 @@ export function createUnconfiguredEmailTransport(): EmailTransport {
     },
   };
 }
+
+/**
+ * Always-succeeding, never-delivers-anywhere test double. Exists solely so
+ * PR5's E2E suite can exercise the real `POST /api/contacto` pipeline through
+ * to a genuine client-side success state against a live self-hosted Cap
+ * instance, without fabricating a real SMTP/transactional provider (still an
+ * explicit OPEN ITEM — see spec "Open Items"). Selected only by
+ * `resolveEmailTransport` in `src/pages/api/contacto.ts` when
+ * `CONTACT_EMAIL_TEST_MODE` is exactly `"true"`; every other value — unset,
+ * empty, or anything else — keeps the safe `createUnconfiguredEmailTransport`
+ * default. Never enable this flag in production.
+ */
+export function createTestEmailTransport(): EmailTransport {
+  return {
+    async send(): Promise<void> {
+      // Intentionally a no-op: never contacts a real provider, never logs
+      // the message (PII rule), always resolves so the route can be
+      // end-to-end tested up to a genuine success response.
+    },
+  };
+}

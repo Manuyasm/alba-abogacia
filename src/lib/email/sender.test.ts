@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   ContactEmailSender,
+  createTestEmailTransport,
   createUnconfiguredEmailTransport,
   type EmailMessage,
   type EmailTransport,
@@ -95,5 +96,13 @@ describe("ContactEmailSender", () => {
     const result = await sender.send(payload);
 
     expect(result).toEqual({ success: false, reason: "send_failed" });
+  });
+
+  it("the test transport placeholder always resolves successfully without delivering anywhere", async () => {
+    const sender = new ContactEmailSender(createTestEmailTransport(), config);
+
+    const result = await sender.send(payload);
+
+    expect(result).toEqual({ success: true });
   });
 });
