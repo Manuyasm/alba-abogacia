@@ -1,0 +1,27 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { ContactForm } from "@/components/contact/ContactForm";
+
+// Office contact details are unconfirmed client facts (tracked as open items
+// since sdd-init/proposal) — named placeholders only, never fabricated.
+const OFFICE_ADDRESS_LANGREO = "{{OFFICE_ADDRESS_LANGREO}}";
+const OFFICE_PHONE = "{{OFFICE_PHONE}}";
+const COLEGIADA_NUMBER = "{{COLEGIADA_NUMBER}}";
+---
+
+<BaseLayout title="Contacto — ALBA Abogacía & Consulting">
+  <main class="mx-auto max-w-3xl px-4 py-16">
+    <ContactForm client:idle />
+
+    <address class="mt-12 border-t border-border pt-8 text-sm not-italic text-muted">
+      <p>{OFFICE_ADDRESS_LANGREO}</p>
+      <p class="mt-1">
+        Teléfono:
+        <a href={`tel:${OFFICE_PHONE}`} class="font-medium text-brand-red underline underline-offset-2">
+          {OFFICE_PHONE}
+        </a>
+      </p>
+      <p class="mt-1">Colegiada n.º {COLEGIADA_NUMBER}</p>
+    </address>
+  </main>
+</BaseLayout>

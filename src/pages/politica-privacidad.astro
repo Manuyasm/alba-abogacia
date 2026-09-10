@@ -1,0 +1,92 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+// RGPD (UE) 2016/679 / LOPDGDD 3/2018 — borrador pendiente de revisión legal
+// final y de confirmación del cliente antes de publicación (spec: la casilla
+// de consentimiento del formulario de contacto enlaza a esta página; PR4
+// scope note). Los marcadores de posición siguientes NO deben sustituirse
+// por datos inventados: deben confirmarse con el cliente/asesoría legal.
+const DATA_CONTROLLER_LEGAL_NAME = "{{DATA_CONTROLLER_LEGAL_NAME}}";
+const RETENTION_PERIOD = "{{RETENTION_PERIOD}}";
+const DATA_RIGHTS_CONTACT = "{{DATA_RIGHTS_CONTACT}}";
+---
+
+<BaseLayout title="Política de privacidad — ALBA Abogacía & Consulting">
+  <main class="mx-auto max-w-3xl px-4 py-16 text-ink">
+    <h1 class="font-heading text-3xl text-brand-brown">Política de privacidad</h1>
+
+    <p
+      role="alert"
+      class="mt-4 rounded-md border border-error bg-error/10 px-4 py-3 text-sm text-error"
+    >
+      Aviso: este documento es un borrador pendiente de revisión legal y de
+      confirmación por parte del cliente. No debe considerarse un texto legal
+      definitivo hasta que se resuelvan los marcadores de posición indicados a
+      continuación.
+    </p>
+
+    <p class="mt-6">
+      En cumplimiento del Reglamento (UE) 2016/679 del Parlamento Europeo y
+      del Consejo, de 27 de abril de 2016 (RGPD), y de la Ley Orgánica 3/2018,
+      de 5 de diciembre, de Protección de Datos Personales y garantía de los
+      derechos digitales (LOPDGDD), se informa a las personas usuarias del
+      formulario de contacto de este sitio web de lo siguiente.
+    </p>
+
+    <h2 class="mt-8 font-heading text-2xl text-brand-brown">
+      1. Responsable del tratamiento
+    </h2>
+    <p class="mt-2">{DATA_CONTROLLER_LEGAL_NAME}</p>
+
+    <h2 class="mt-8 font-heading text-2xl text-brand-brown">
+      2. Datos que recogemos
+    </h2>
+    <p class="mt-2">
+      A través del formulario de contacto recogemos únicamente los datos que
+      usted nos facilita voluntariamente: nombre, correo electrónico,
+      teléfono y el contenido del mensaje.
+    </p>
+
+    <h2 class="mt-8 font-heading text-2xl text-brand-brown">
+      3. Finalidad y base jurídica
+    </h2>
+    <p class="mt-2">
+      Tratamos estos datos con la finalidad de responder a su consulta y
+      gestionar la relación derivada de su solicitud de contacto. La base
+      jurídica del tratamiento es su consentimiento expreso, otorgado al
+      marcar la casilla de aceptación del formulario, conforme al artículo
+      6.1.a) del RGPD.
+    </p>
+
+    <h2 class="mt-8 font-heading text-2xl text-brand-brown">
+      4. Plazo de conservación
+    </h2>
+    <p class="mt-2">
+      Conservaremos sus datos durante {RETENTION_PERIOD}, salvo que la
+      normativa aplicable exija un plazo distinto o usted ejerza su derecho
+      de supresión con anterioridad.
+    </p>
+
+    <h2 class="mt-8 font-heading text-2xl text-brand-brown">5. Sus derechos</h2>
+    <p class="mt-2">
+      Usted tiene derecho a acceder a sus datos personales, a solicitar la
+      rectificación de los datos inexactos y a solicitar su supresión cuando,
+      entre otros motivos, los datos ya no sean necesarios para los fines
+      para los que fueron recogidos. También tiene derecho a solicitar la
+      limitación del tratamiento, a oponerse al mismo y a la portabilidad de
+      sus datos.
+    </p>
+    <p class="mt-2">
+      Para ejercer estos derechos puede dirigirse a: {DATA_RIGHTS_CONTACT}.
+    </p>
+
+    <h2 class="mt-8 font-heading text-2xl text-brand-brown">
+      6. Más información
+    </h2>
+    <p class="mt-2">
+      Si considera que el tratamiento de sus datos personales no se ajusta a
+      la normativa vigente, tiene derecho a presentar una reclamación ante la
+      Agencia Española de Protección de Datos (www.aepd.es).
+    </p>
+  </main>
+</BaseLayout>
