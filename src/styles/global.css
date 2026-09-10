@@ -21,6 +21,16 @@
 
   --font-heading: "Source Serif 4", Georgia, serif;
   --font-sans: "Inter", system-ui, sans-serif;
+
+  /*
+   * Registers the `animate-fade-in` / `animate-slide-up` utilities (Tailwind
+   * v4 `--animate-*` theme namespace, same convention as its own built-in
+   * `--animate-spin`/`--animate-pulse`). Bounded 150-250ms per spec's
+   * "Transition Duration Bound"; paired on every usage with
+   * `motion-reduce:animate-none` (spec: "Motion Guardrail").
+   */
+  --animate-fade-in: fade-in 200ms ease-out;
+  --animate-slide-up: slide-up 200ms ease-out;
 }
 
 body {
@@ -36,4 +46,75 @@ h4,
 h5,
 h6 {
   font-family: var(--font-heading);
+}
+
+/*
+ * Site-wide motion system (spec: "Global Reduced-Motion Respect",
+ * "Transition Duration Bound", "Fail-Open Scroll-Reveal"; design: "Motion CSS
+ * Foundation"). Global safety net first: zeroes every animation/transition
+ * duration when the OS requests reduced motion, independent of whether an
+ * individual element also carries its own `motion-reduce:` Tailwind variant.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Shared bounded (150-250ms) transition token for interactive elements. */
+@utility transition-interactive {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-timing-function: ease-out;
+  transition-duration: 200ms;
+}
+
+/*
+ * Fail-open scroll-reveal (design: "Scroll-reveal state model"). Elements
+ * carrying `data-reveal` are fully visible by default — CSS never hides them
+ * on its own. Only after `src/lib/motion/scroll-reveal.ts` confirms
+ * IntersectionObserver support and no reduced-motion preference does it add
+ * `.reveal-pending` (pre-entrance state) then swap to `.reveal-visible` on
+ * intersection, so JS never becomes the sole visibility mechanism.
+ */
+[data-reveal] {
+  opacity: 1;
+  transform: none;
+}
+
+[data-reveal].reveal-pending {
+  opacity: 0;
+  transform: translateY(0.75rem);
+}
+
+[data-reveal].reveal-visible {
+  opacity: 1;
+  transform: none;
+  transition-property: opacity, transform;
+  transition-timing-function: ease-out;
+  transition-duration: 200ms;
 }
