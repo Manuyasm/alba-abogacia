@@ -20,17 +20,31 @@ import { trackContactFormResult } from "@/lib/analytics/umami";
  * `src/pages/api/contacto.ts`. The Cap widget is mounted directly by this
  * component: `import "@cap.js/widget"` registers the `cap-widget` custom
  * element (a no-op during Astro's server-side prerendering, since the
- * package itself guards on `typeof window === "undefined"`), and a
- * `<cap-widget data-cap-api-endpoint>` element is rendered inside the
- * designated slot (`data-testid="cap-widget-slot"`). This component listens
- * for the `solve` custom event that element dispatches with `{ token }` —
- * `bubbles: true, composed: true` per Cap.js's own implementation — so the
- * listener on the slot catches it regardless of whether it bubbles up from
- * the widget or (as in tests) is dispatched directly on the slot. Umami
- * events fire only after the server response resolves (spec:
- * "Post-Confirmation Umami Event Firing") — never on raw submit, matching
- * the "server-confirmed only" contract established in PR2's
- * `trackContactFormResult`.
+ * package itself guards on `typeof window === "undefined"`).
+ *
+ * The `<cap-widget>` element itself is created and appended **imperatively**
+ * inside a `useEffect`, never rendered as JSX (PR5 fix — see apply-progress
+ * "React hydration mismatch" finding). The real widget's own
+ * `connectedCallback` synchronously mutates its light DOM (it injects a
+ * hidden `<input type="hidden" name="cap-token">` child, per `src/cap.js`)
+ * the instant the browser upgrades the custom element — which happens
+ * during the browser's initial HTML parse of the server-rendered markup,
+ * before React ever hydrates. If the tag were server-rendered via JSX,
+ * React would hydrate expecting zero children on that node while the real
+ * DOM already has one, producing a genuine hydration-mismatch error (caught
+ * only by a real-browser E2E test, since jsdom's mocked widget never
+ * performs this mutation). Creating the element only after hydration
+ * completes (client-only, inside an effect) means React never owns or
+ * diffs its children at all.
+ *
+ * This component listens for the `solve` custom event the widget dispatches
+ * with `{ token }` — `bubbles: true, composed: true` per Cap.js's own
+ * implementation — so the listener on the slot catches it regardless of
+ * whether it bubbles up from the widget or (as in tests) is dispatched
+ * directly on the slot. Umami events fire only after the server response
+ * resolves (spec: "Post-Confirmation Umami Event Firing") — never on raw
+ * submit, matching the "server-confirmed only" contract established in
+ * PR2's `trackContactFormResult`.
  */
 
 /**
@@ -46,23 +60,6 @@ function buildCapWidgetEndpoint(apiUrl: string, siteKey: string): string | undef
   }
   const base = apiUrl.endsWith("/") ? apiUrl.slice(0, -1) : apiUrl;
   return `${base}/${siteKey}/`;
-}
-
-/**
- * `@cap.js/widget`'s `cap.d.ts` augments `HTMLElementTagNameMap` (for
- * `document.createElement`) but not React's `JSX.IntrinsicElements`, so the
- * `<cap-widget>` tag needs its own declaration here to type-check under JSX.
- * React 19's types declare `JSX` inside the `react` module (`React.JSX`),
- * not the ambient global namespace, so the augmentation targets that module.
- */
-declare module "react" {
-  namespace JSX {
-    interface IntrinsicElements {
-      "cap-widget": DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> & {
-        "data-cap-api-endpoint"?: string;
-      };
-    }
-  }
 }
 
 export interface ContactFormProps {
@@ -178,11 +175,13 @@ export function ContactForm({ className }: ContactFormProps) {
     [],
   );
 
-  // Listens for the `solve` event the mounted `<cap-widget>` element (below)
-  // dispatches on itself (`{ detail: { token } }`, `bubbles: true` per
-  // Cap.js's own implementation), so this listener on the slot catches it
-  // whether it bubbles up from the widget or is dispatched directly on the
-  // slot (as tests do).
+  // Creates and appends the real `<cap-widget>` element imperatively
+  // (client-only, post-hydration) — see the file-level doc comment for why
+  // this must never be server-rendered JSX. Also listens for the `solve`
+  // event the widget dispatches on itself (`{ detail: { token } }`,
+  // `bubbles: true` per Cap.js's own implementation), so the listener on
+  // the slot catches it whether it bubbles up from the widget or is
+  // dispatched directly on the slot (as tests do).
   useEffect(() => {
     const container = capSlotRef.current;
     if (!container) {
@@ -196,9 +195,20 @@ export function ContactForm({ className }: ContactFormProps) {
       }
     }
 
+    const widget = document.createElement("cap-widget");
+    if (capWidgetEndpoint) {
+      widget.setAttribute("data-cap-api-endpoint", capWidgetEndpoint);
+    }
     container.addEventListener("solve", handleSolve);
-    return () => container.removeEventListener("solve", handleSolve);
-  }, [handleChange]);
+    container.appendChild(widget);
+
+    return () => {
+      container.removeEventListener("solve", handleSolve);
+      if (widget.parentNode === container) {
+        container.removeChild(widget);
+      }
+    };
+  }, [handleChange, capWidgetEndpoint]);
 
   function focusFirstInvalidField(fieldErrors: Partial<Record<FieldName, string>>) {
     for (const field of FOCUS_ORDER) {
@@ -416,15 +426,16 @@ export function ContactForm({ className }: ContactFormProps) {
 
         <div>
           {/* Designated Cap widget mount point (design rev.2 / spec: "Server-Side
-              Cap Token Verification"). Mounts the real `<cap-widget>` custom
-              element registered by the `@cap.js/widget` side-effect import at
-              the top of this file, pointed at the local self-hosted Cap
-              instance from PR1's docker-compose via `PUBLIC_CAP_API_URL` /
+              Cap Token Verification"). Left empty in JSX on purpose — the real
+              `<cap-widget>` custom element (registered by the `@cap.js/widget`
+              side-effect import at the top of this file) is created and
+              appended imperatively by the effect above, only after hydration
+              completes, to avoid a React hydration mismatch (see file-level
+              doc comment). Pointed at the local self-hosted Cap instance from
+              PR1's docker-compose via `PUBLIC_CAP_API_URL` /
               `PUBLIC_CAP_SITE_KEY`. Server-side verification against the same
               instance is wired in `src/pages/api/contacto.ts`. */}
-          <div ref={capSlotRef} data-testid="cap-widget-slot" className="my-2 min-h-[2px]">
-            <cap-widget data-cap-api-endpoint={capWidgetEndpoint} />
-          </div>
+          <div ref={capSlotRef} data-testid="cap-widget-slot" className="my-2 min-h-[2px]" />
           {errors.capToken && (
             <p id={capTokenErrorId} role="alert" className="text-sm text-error">
               {errors.capToken}
