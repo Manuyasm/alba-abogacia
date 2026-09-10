@@ -1,0 +1,50 @@
+services:
+  # Self-hosted Cap CAPTCHA (https://capjs.js.org) — AGENTS.md §9.
+  # Pinned to an explicit version, never `latest`, per the "no depender de `latest`
+  # en producción" requirement.
+  cap:
+    image: tiago2/cap:3.1.11
+    container_name: alba-abogacia-cap
+    environment:
+      ADMIN_KEY: ${CAP_ADMIN_KEY:?CAP_ADMIN_KEY must be set}
+      REDIS_URL: redis://valkey:6379
+      # Restrict CORS to the production domain(s); defaults to `*` upstream if unset,
+      # which AGENTS.md §9 explicitly forbids for production.
+      CORS_ORIGIN: ${CAP_CORS_ORIGIN:?CAP_CORS_ORIGIN must be set to the production domain(s)}
+    depends_on:
+      valkey:
+        condition: service_healthy
+    networks:
+      - cap-internal
+    ports:
+      # Exposed to the host only for local development / the reverse proxy to target.
+      # In production this port must be reached exclusively through a TLS-terminating
+      # reverse proxy (Traefik/Dokploy) per AGENTS.md §9 ("Publicar el endpoint solo
+      # mediante HTTPS") — never expose it directly to the public internet.
+      - "3000:3000"
+    restart: unless-stopped
+
+  # Valkey backs Cap's challenge/session storage. Kept as a separate, persistent
+  # service per AGENTS.md §9 ("Mantener Cap y Valkey en servicios separados y
+  # persistentes") — not reachable outside the internal network.
+  valkey:
+    image: valkey/valkey:9-alpine
+    container_name: alba-abogacia-cap-valkey
+    volumes:
+      - cap-valkey-data:/data
+    command: valkey-server --save 60 1 --loglevel warning --maxmemory-policy noeviction
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - cap-internal
+    restart: unless-stopped
+
+networks:
+  cap-internal:
+    driver: bridge
+
+volumes:
+  cap-valkey-data:

@@ -5,6 +5,7 @@
   "compilerOptions": {
     "strict": true,
     "noUncheckedIndexedAccess": true,
+    "types": ["node", "vitest/globals"],
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "baseUrl": ".",
