@@ -2,10 +2,14 @@
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { ContactForm } from "@/components/contact/ContactForm";
 
-// Office contact details are unconfirmed client facts (tracked as open items
-// since sdd-init/proposal) — named placeholders only, never fabricated.
-const OFFICE_ADDRESS_LANGREO = "{{OFFICE_ADDRESS_LANGREO}}";
-const OFFICE_PHONE = "{{OFFICE_PHONE}}";
+// Office address/phone confirmed by the client 2026-09-10 (chat). Colegiada
+// number remains an unconfirmed client fact — named placeholder only.
+// Madrid office (C/ Bravo Murillo, nº 377, 2º, Madrid) is also confirmed but
+// not yet shown on this page — this page currently only renders one office
+// block; adding the second office is a page-content scope decision, not a
+// mechanical placeholder fill, left for a future change.
+const OFFICE_ADDRESS_LANGREO = "C/ Inventor La Cierva, nº 22, 1º A, C.P. 33930, Langreo, Principado de Asturias";
+const OFFICE_PHONE = "985694493";
 const COLEGIADA_NUMBER = "{{COLEGIADA_NUMBER}}";
 ---
 
