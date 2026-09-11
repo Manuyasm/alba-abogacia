@@ -1,3 +1,4 @@
+import "@cap.js/widget";
 import {
   useCallback,
   useEffect,
@@ -15,17 +16,54 @@ import { trackContactFormResult } from "@/lib/analytics/umami";
  * Validation", "Accessibility"; design rev.2 — single component mounted both
  * standalone on `contacto.astro` and embedded in `index.astro#contacto`).
  *
- * Scope of THIS PR (PR3 of 5, stacked-to-main): the form's structure, client-side
- * validation, and submit handler are complete and unit-tested against a mocked
- * `fetch` — `src/pages/api/contacto.ts` does not exist yet (PR4). The Cap widget
- * itself is also PR4's concern: this component only exposes a designated mount
- * point (`data-testid="cap-widget-slot"`) and listens for the `solve` custom
- * event that a mounted `<cap-widget>` element dispatches with `{ token }`, per
- * Cap.js's documented client contract. Umami events fire only after the server
- * response resolves (spec: "Post-Confirmation Umami Event Firing") — never on
- * raw submit, matching the "server-confirmed only" contract established in PR2's
+ * The form's structure, client-side validation, and submit handler post to
+ * `src/pages/api/contacto.ts`. The Cap widget is mounted directly by this
+ * component: `import "@cap.js/widget"` registers the `cap-widget` custom
+ * element (a no-op during Astro's server-side prerendering, since the
+ * package itself guards on `typeof window === "undefined"`), and a
+ * `<cap-widget data-cap-api-endpoint>` element is rendered inside the
+ * designated slot (`data-testid="cap-widget-slot"`). This component listens
+ * for the `solve` custom event that element dispatches with `{ token }` —
+ * `bubbles: true, composed: true` per Cap.js's own implementation — so the
+ * listener on the slot catches it regardless of whether it bubbles up from
+ * the widget or (as in tests) is dispatched directly on the slot. Umami
+ * events fire only after the server response resolves (spec:
+ * "Post-Confirmation Umami Event Firing") — never on raw submit, matching
+ * the "server-confirmed only" contract established in PR2's
  * `trackContactFormResult`.
  */
+
+/**
+ * Builds the `data-cap-api-endpoint` value from the `PUBLIC_`-prefixed env
+ * vars (see `src/env.d.ts`), matching the `{apiUrl}/{siteKey}/` convention
+ * `src/lib/captcha/verify.ts` already uses server-side for `/siteverify`.
+ * Returns `undefined` when either var is unset, so the widget mounts without
+ * a (guaranteed-invalid) endpoint rather than pointing at a broken URL.
+ */
+function buildCapWidgetEndpoint(apiUrl: string, siteKey: string): string | undefined {
+  if (!apiUrl || !siteKey) {
+    return undefined;
+  }
+  const base = apiUrl.endsWith("/") ? apiUrl.slice(0, -1) : apiUrl;
+  return `${base}/${siteKey}/`;
+}
+
+/**
+ * `@cap.js/widget`'s `cap.d.ts` augments `HTMLElementTagNameMap` (for
+ * `document.createElement`) but not React's `JSX.IntrinsicElements`, so the
+ * `<cap-widget>` tag needs its own declaration here to type-check under JSX.
+ * React 19's types declare `JSX` inside the `react` module (`React.JSX`),
+ * not the ambient global namespace, so the augmentation targets that module.
+ */
+declare module "react" {
+  namespace JSX {
+    interface IntrinsicElements {
+      "cap-widget": DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> & {
+        "data-cap-api-endpoint"?: string;
+      };
+    }
+  }
+}
 
 export interface ContactFormProps {
   /** Optional layout hook only — e.g. Home's `#contacto` section vs the standalone page. */
@@ -100,6 +138,10 @@ const LINK_CLASSES =
 
 export function ContactForm({ className }: ContactFormProps) {
   const uid = useId();
+  const capWidgetEndpoint = buildCapWidgetEndpoint(
+    import.meta.env.PUBLIC_CAP_API_URL ?? "",
+    import.meta.env.PUBLIC_CAP_SITE_KEY ?? "",
+  );
   const [values, setValues] = useState<ContactFormValues>(INITIAL_VALUES);
   const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({});
   const [status, setStatus] = useState<SubmitStatus>("idle");
@@ -136,10 +178,11 @@ export function ContactForm({ className }: ContactFormProps) {
     [],
   );
 
-  // Listens for the `solve` event a mounted Cap widget dispatches on its own
-  // element (`{ detail: { token } }`, per Cap.js's client contract). Mounting
-  // the actual widget script is PR4's concern (`src/pages/api/contacto.ts`
-  // wiring) — this slot only needs to exist and be listened to.
+  // Listens for the `solve` event the mounted `<cap-widget>` element (below)
+  // dispatches on itself (`{ detail: { token } }`, `bubbles: true` per
+  // Cap.js's own implementation), so this listener on the slot catches it
+  // whether it bubbles up from the widget or is dispatched directly on the
+  // slot (as tests do).
   useEffect(() => {
     const container = capSlotRef.current;
     if (!container) {
@@ -373,10 +416,15 @@ export function ContactForm({ className }: ContactFormProps) {
 
         <div>
           {/* Designated Cap widget mount point (design rev.2 / spec: "Server-Side
-              Cap Token Verification"). PR4 mounts the actual `<cap-widget>`
-              custom element here and wires `src/pages/api/contacto.ts`; this PR
-              only listens for its `solve` event on this container. */}
-          <div ref={capSlotRef} data-testid="cap-widget-slot" className="my-2 min-h-[2px]" />
+              Cap Token Verification"). Mounts the real `<cap-widget>` custom
+              element registered by the `@cap.js/widget` side-effect import at
+              the top of this file, pointed at the local self-hosted Cap
+              instance from PR1's docker-compose via `PUBLIC_CAP_API_URL` /
+              `PUBLIC_CAP_SITE_KEY`. Server-side verification against the same
+              instance is wired in `src/pages/api/contacto.ts`. */}
+          <div ref={capSlotRef} data-testid="cap-widget-slot" className="my-2 min-h-[2px]">
+            <cap-widget data-cap-api-endpoint={capWidgetEndpoint} />
+          </div>
           {errors.capToken && (
             <p id={capTokenErrorId} role="alert" className="text-sm text-error">
               {errors.capToken}
