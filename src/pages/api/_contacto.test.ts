@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { handleContactRequest, type ContactRouteDeps } from "./contacto";
+import { handleContactRequest, resolveEmailTransport, type ContactRouteDeps } from "./contacto";
 import type { EmailSender } from "@/lib/email/sender";
 import type { RateLimiter } from "@/lib/rate-limit/limiter";
 
@@ -259,5 +259,24 @@ describe("POST /api/contacto — handleContactRequest", () => {
       .join(" ");
 
     expect(allLoggedText).not.toContain(mensaje);
+  });
+});
+
+describe("resolveEmailTransport", () => {
+  it("defaults to the unconfigured placeholder when CONTACT_EMAIL_TEST_MODE is unset", async () => {
+    const transport = resolveEmailTransport({});
+    await expect(transport.send({ to: "x", subject: "x", html: "x", text: "x" })).rejects.toThrow();
+  });
+
+  it("defaults to the unconfigured placeholder for any value other than the exact opt-in string", async () => {
+    const transport = resolveEmailTransport({ CONTACT_EMAIL_TEST_MODE: "1" });
+    await expect(transport.send({ to: "x", subject: "x", html: "x", text: "x" })).rejects.toThrow();
+  });
+
+  it("returns the always-succeeding test transport only when explicitly opted in", async () => {
+    const transport = resolveEmailTransport({ CONTACT_EMAIL_TEST_MODE: "true" });
+    await expect(
+      transport.send({ to: "x", subject: "x", html: "x", text: "x" }),
+    ).resolves.toBeUndefined();
   });
 });

@@ -22,4 +22,13 @@ interface ImportMetaEnv {
   readonly PUBLIC_CAP_SITE_KEY: string;
   readonly CAP_SECRET_KEY: string;
   readonly CONTACT_RECIPIENT_EMAIL: string;
+  /**
+   * Dev/E2E-only opt-in (see `src/pages/api/contacto.ts`'s
+   * `resolveEmailTransport`): when exactly `"true"`, swaps in an
+   * always-succeeding test email transport so the real pipeline can be
+   * exercised end-to-end against a live Cap instance without a real SMTP
+   * provider. Unset in production; the SMTP provider itself remains an
+   * explicit OPEN ITEM (spec: "Open Items").
+   */
+  readonly CONTACT_EMAIL_TEST_MODE?: string;
 }

@@ -6,8 +6,10 @@ import {
 } from "@/lib/captcha/verify";
 import {
   ContactEmailSender,
+  createTestEmailTransport,
   createUnconfiguredEmailTransport,
   type EmailSender,
+  type EmailTransport,
 } from "@/lib/email/sender";
 import { createRateLimiter, type RateLimiter } from "@/lib/rate-limit/limiter";
 import { checkCsrfPolicy } from "@/lib/security/csrf";
@@ -164,6 +166,24 @@ export async function handleContactRequest(
   return jsonResponse({ success: true }, 200);
 }
 
+/**
+ * Selects the email transport for the production route. Defaults to the
+ * safe `createUnconfiguredEmailTransport()` placeholder — SMTP/transactional
+ * provider selection is still an explicit OPEN ITEM (spec: "Open Items") and
+ * this module never fabricates one.
+ *
+ * `createTestEmailTransport()` is selected ONLY when `CONTACT_EMAIL_TEST_MODE`
+ * is exactly `"true"` — a dedicated, explicit, dev/E2E-only opt-in that lets
+ * PR5's Playwright suite exercise the real pipeline against a live
+ * self-hosted Cap instance through to a genuine success response, without a
+ * real SMTP account. Never set this flag in production.
+ */
+export function resolveEmailTransport(env: { CONTACT_EMAIL_TEST_MODE?: string }): EmailTransport {
+  return env.CONTACT_EMAIL_TEST_MODE === "true"
+    ? createTestEmailTransport()
+    : createUnconfiguredEmailTransport();
+}
+
 function createProductionDeps(): ContactRouteDeps {
   return {
     captchaConfig: {
@@ -171,13 +191,10 @@ function createProductionDeps(): ContactRouteDeps {
       siteKey: import.meta.env.PUBLIC_CAP_SITE_KEY ?? "",
       secretKey: import.meta.env.CAP_SECRET_KEY ?? "",
     },
-    // SMTP/transactional provider is an explicit OPEN ITEM (spec: "Open
-    // Items") — never fabricate one. `createUnconfiguredEmailTransport()`
-    // always fails through the same generic `SEND_FAILED` path a real
-    // outage would, until a provider is selected and wired here.
-    emailSender: new ContactEmailSender(createUnconfiguredEmailTransport(), {
-      recipientEmail: import.meta.env.CONTACT_RECIPIENT_EMAIL ?? "",
-    }),
+    emailSender: new ContactEmailSender(
+      resolveEmailTransport({ CONTACT_EMAIL_TEST_MODE: import.meta.env.CONTACT_EMAIL_TEST_MODE }),
+      { recipientEmail: import.meta.env.CONTACT_RECIPIENT_EMAIL ?? "" },
+    ),
     rateLimiter: createRateLimiter(),
   };
 }
