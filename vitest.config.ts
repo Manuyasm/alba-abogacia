@@ -20,7 +20,9 @@ import react from "@vitejs/plugin-react";
 //   the plan documented in PR1's apply-progress. PR3 extends it again with
 //   `src/pages/*.test.ts` (single-level only — deliberately does NOT match
 //   `src/pages/api/**`, which stays on the "unit" project unaffected) for
-//   `contacto.astro`'s page-level regression test.
+//   `contacto.astro`'s page-level regression test. `home-content` PR1 extends
+//   it again with `src/components/home/**/*.test.ts` for the page-specific
+//   `Hero`/`ServicesSummary` partials (same Astro Container pattern).
 export default defineConfig({
   test: {
     projects: [
@@ -41,6 +43,7 @@ export default defineConfig({
             "tests/e2e/**",
             "src/layouts/**/*.test.ts",
             "src/components/common/**/*.test.ts",
+            "src/components/home/**/*.test.ts",
             "src/pages/*.test.ts",
           ],
         },
@@ -50,7 +53,12 @@ export default defineConfig({
           name: "astro",
           environment: "node",
           globals: true,
-          include: ["src/layouts/**/*.test.ts", "src/components/common/**/*.test.ts", "src/pages/*.test.ts"],
+          include: [
+            "src/layouts/**/*.test.ts",
+            "src/components/common/**/*.test.ts",
+            "src/components/home/**/*.test.ts",
+            "src/pages/*.test.ts",
+          ],
         },
       }),
     ],
