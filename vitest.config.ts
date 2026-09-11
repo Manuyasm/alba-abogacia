@@ -15,7 +15,9 @@ import react from "@vitejs/plugin-react";
 //   Astro's experimental Container API (`astro/container`). This is the
 //   first `.astro` component test in the repo (see `BaseLayout.test.ts`);
 //   scoped to its own project so the Astro compiler plugin never touches the
-//   "unit" project's transform pipeline.
+//   "unit" project's transform pipeline. PR2 extends its `include` glob to
+//   `src/components/common/**/*.test.ts` for `SiteHeader`/`SiteFooter`, per
+//   the plan documented in PR1's apply-progress.
 export default defineConfig({
   test: {
     projects: [
@@ -32,7 +34,7 @@ export default defineConfig({
           globals: true,
           setupFiles: ["./vitest.setup.ts"],
           include: ["src/**/*.test.{ts,tsx}"],
-          exclude: ["tests/e2e/**", "src/layouts/**/*.test.ts"],
+          exclude: ["tests/e2e/**", "src/layouts/**/*.test.ts", "src/components/common/**/*.test.ts"],
         },
       }),
       getViteConfig({
@@ -40,7 +42,7 @@ export default defineConfig({
           name: "astro",
           environment: "node",
           globals: true,
-          include: ["src/layouts/**/*.test.ts"],
+          include: ["src/layouts/**/*.test.ts", "src/components/common/**/*.test.ts"],
         },
       }),
     ],

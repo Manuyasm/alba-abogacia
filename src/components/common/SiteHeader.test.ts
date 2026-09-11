@@ -1,0 +1,60 @@
+import { experimental_AstroContainer as AstroContainer } from "astro/container";
+import { describe, expect, it } from "vitest";
+import SiteHeader from "./SiteHeader.astro";
+
+// Uses the same Astro Container pattern established by
+// `src/layouts/BaseLayout.test.ts` (PR1) — renders the real `.astro` markup
+// to an HTML string without a browser, then asserts against the rendered
+// output. `Astro.url.pathname` (used for the active-link check) is driven by
+// the `request` URL passed to `renderToString`.
+describe("SiteHeader", () => {
+  it("renders all 4 nav links with the expected hrefs", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(SiteHeader, {
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    expect(html).toContain('href="/"');
+    expect(html).toContain('href="/servicios"');
+    expect(html).toContain('href="/el-despacho"');
+    expect(html).toContain('href="/contacto"');
+    expect(html).toContain("Inicio");
+    expect(html).toContain("Servicios");
+    expect(html).toContain("El despacho");
+    expect(html).toContain("Contacto");
+  });
+
+  it("marks only the matching link with aria-current=page on the root route", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(SiteHeader, {
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    expect(html).toMatch(/<a href="\/" aria-current="page"[^>]*>\s*Inicio/);
+    expect(html).not.toMatch(/<a href="\/servicios" aria-current="page"/);
+    expect(html).not.toMatch(/<a href="\/el-despacho" aria-current="page"/);
+    expect(html).not.toMatch(/<a href="\/contacto" aria-current="page"/);
+  });
+
+  it("marks only the matching link with aria-current=page on a nested route", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(SiteHeader, {
+      request: new Request("https://alba-abogacia.es/servicios"),
+    });
+
+    expect(html).toMatch(/<a href="\/servicios" aria-current="page"[^>]*>\s*Servicios/);
+    expect(html).not.toMatch(/<a href="\/" aria-current="page"/);
+    expect(html).not.toMatch(/<a href="\/el-despacho" aria-current="page"/);
+    expect(html).not.toMatch(/<a href="\/contacto" aria-current="page"/);
+  });
+
+  it("exposes a mobile nav disclosure via native details/summary with an accessible label", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(SiteHeader, {
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    expect(html).toMatch(/<details[^>]*>[\s\S]*<summary[^>]*aria-label="Abrir menú"[^>]*>/);
+    expect(html).toContain('aria-label="Principal (móvil)"');
+  });
+});
