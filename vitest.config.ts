@@ -1,22 +1,48 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig, defineProject } from "vitest/config";
+import { getViteConfig } from "astro/config";
 import react from "@vitejs/plugin-react";
 
-// Standalone Vitest config (not `getViteConfig` from astro/config) so unit/component
-// tests run fast without booting the Astro dev pipeline. React islands are tested via
-// @testing-library/react in a jsdom environment; server-side lib code (validation,
-// captcha, email, analytics) runs in the same environment since it has no DOM needs.
+// Vitest 5 "projects" API (root config becomes a container that only lists
+// projects; it never runs tests itself — see Vitest's `test.projects` docs).
+// Two projects share a single `pnpm test` invocation:
+//
+// - "unit": the original standalone Vite config (react plugin + jsdom),
+//   UNCHANGED in behavior, for every pre-existing `.test.ts`/`.test.tsx` file
+//   (React islands via @testing-library/react, plain server-side lib code).
+// - "astro": Astro's own Vite config (via `getViteConfig`, which loads
+//   `astro.config.ts` — Astro compiler, `@astrojs/react`, Tailwind vite
+//   plugin) so `.astro` files can be imported directly and exercised with
+//   Astro's experimental Container API (`astro/container`). This is the
+//   first `.astro` component test in the repo (see `BaseLayout.test.ts`);
+//   scoped to its own project so the Astro compiler plugin never touches the
+//   "unit" project's transform pipeline.
 export default defineConfig({
-  plugins: [react()],
   test: {
-    environment: "jsdom",
-    globals: true,
-    setupFiles: ["./vitest.setup.ts"],
-    include: ["src/**/*.test.{ts,tsx}"],
-    exclude: ["tests/e2e/**"],
-  },
-  resolve: {
-    alias: {
-      "@": new URL("./src", import.meta.url).pathname,
-    },
+    projects: [
+      defineProject({
+        plugins: [react()],
+        resolve: {
+          alias: {
+            "@": new URL("./src", import.meta.url).pathname,
+          },
+        },
+        test: {
+          name: "unit",
+          environment: "jsdom",
+          globals: true,
+          setupFiles: ["./vitest.setup.ts"],
+          include: ["src/**/*.test.{ts,tsx}"],
+          exclude: ["tests/e2e/**", "src/layouts/**/*.test.ts"],
+        },
+      }),
+      getViteConfig({
+        test: {
+          name: "astro",
+          environment: "node",
+          globals: true,
+          include: ["src/layouts/**/*.test.ts"],
+        },
+      }),
+    ],
   },
 });
