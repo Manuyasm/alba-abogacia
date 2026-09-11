@@ -109,6 +109,18 @@ describe("servicios.astro (page composition)", () => {
     expect(ctaSection).toMatch(/<a[^>]*href="\/contacto"[^>]*>\s*Solicitar consulta\s*<\/a>/);
   });
 
+  // animations-v2 PR E, design decision #8: click-tracking wiring.
+  it("marks the closing CTA with the appointment_click data-track hook", async () => {
+    const html = await renderServicios();
+
+    const ctaStart = html.indexOf("¿Necesita asesoramiento?");
+    const ctaSection = html.slice(ctaStart);
+
+    expect(ctaSection).toMatch(
+      /<a[^>]*href="\/contacto"[^>]*data-track="appointment_click"[^>]*>\s*Solicitar consulta\s*<\/a>/,
+    );
+  });
+
   it("marks the Servicios nav link (and only that link) as the active route in the header", async () => {
     const html = await renderServicios();
 

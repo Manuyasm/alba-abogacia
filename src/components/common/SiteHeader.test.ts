@@ -95,4 +95,15 @@ describe("SiteHeader", () => {
     expect(html).toMatch(/<header[^>]*data-header[^>]*>/);
     expect(html).toMatch(/<a[^>]*href="\/contacto"[^>]*>\s*Solicitar consulta\s*<\/a>/);
   });
+
+  // animations-v2 PR E, design decision #8: click-tracking wiring — the
+  // persistent desktop CTA carries the `[data-track]` hook `click-tracking.ts` reads.
+  it("marks the desktop 'Solicitar consulta' CTA with the appointment_click data-track hook", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(SiteHeader, {
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    expect(html).toMatch(/<a[^>]*href="\/contacto"[^>]*data-track="appointment_click"[^>]*>\s*Solicitar consulta/);
+  });
 });

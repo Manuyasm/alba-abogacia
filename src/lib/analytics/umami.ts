@@ -38,6 +38,21 @@ export function loadAnalytics(
 export type ContactFormEventName = "contact_form_success" | "contact_form_error";
 
 /**
+ * Click-tracking event names (design decision #8: "Umami click events" —
+ * generic `trackEvent(name)` + `[data-track]` attribute convention). Only
+ * these three are implemented (animations-v2 PR E resolved scope):
+ * `whatsapp_click` (no WhatsApp link exists, number unconfirmed),
+ * `office_selection` (rejected by client), and `service_view` (no
+ * per-service pages exist) are intentionally NOT part of this union — see
+ * `src/lib/analytics/click-tracking.ts`'s `TRACKED_CLICK_EVENT_NAMES`, the
+ * single source of truth enforcing this at the `[data-track]` wiring layer.
+ */
+export type ClickTrackedEventName = "phone_click" | "email_click" | "appointment_click";
+
+/** Every event name this module can fire through the generic `trackEvent()`. */
+export type TrackedEventName = ContactFormEventName | ClickTrackedEventName;
+
+/**
  * A server-confirmed contact-form submission outcome. The type itself is the
  * enforcement mechanism for the "post-confirmation only" rule (spec:
  * "Post-Confirmation Umami Event Firing"): callers can only construct this
@@ -50,12 +65,13 @@ interface UmamiTracker {
 }
 
 /**
- * Fires a contact-form analytics event for a server-confirmed result. MUST
- * only be called after the server has returned — never optimistically on
- * submit. The event payload never carries form field values or PII: only the
- * event name itself is sent.
+ * Fires a named Umami event with no additional payload. Shared by every
+ * caller (contact-form result tracking, click-tracking) so there is exactly
+ * one place that checks the analytics consent gate and looks up the tracker
+ * — the event payload never carries form field values, PII, or any other
+ * property beyond the event name itself.
  */
-export function trackContactFormResult(result: ConfirmedContactFormResult): void {
+export function trackEvent(name: TrackedEventName): void {
   if (!loadAnalytics()) {
     return;
   }
@@ -65,7 +81,16 @@ export function trackContactFormResult(result: ConfirmedContactFormResult): void
     return;
   }
 
+  tracker.track(name);
+}
+
+/**
+ * Fires a contact-form analytics event for a server-confirmed result. MUST
+ * only be called after the server has returned — never optimistically on
+ * submit.
+ */
+export function trackContactFormResult(result: ConfirmedContactFormResult): void {
   const eventName: ContactFormEventName =
     result.status === "success" ? "contact_form_success" : "contact_form_error";
-  tracker.track(eventName);
+  trackEvent(eventName);
 }

@@ -29,6 +29,25 @@ describe("OfficeCard", () => {
     expect(html).toMatch(/href="mailto:ejemplo@ejemplo-ficticio\.test"/);
   });
 
+  // animations-v2 PR E, design decision #8: click-tracking wiring — phone
+  // and email links carry the `[data-track]` hook `click-tracking.ts` reads.
+  it("marks the phone and email links with the click-tracking data-track hooks", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(OfficeCard, {
+      props: {
+        name: "Oficina de ejemplo",
+        addressLines: ["Calle Ficticia, nº 1, Ciudad Ejemplo"],
+        phone: "600000000",
+        phoneHref: "tel:600000000",
+        email: "ejemplo@ejemplo-ficticio.test",
+      },
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    expect(html).toMatch(/href="tel:600000000"[^>]*data-track="phone_click"/);
+    expect(html).toMatch(/href="mailto:ejemplo@ejemplo-ficticio\.test"[^>]*data-track="email_click"/);
+  });
+
   it("renders correctly with no phone or email supplied, with no broken markup", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(OfficeCard, {

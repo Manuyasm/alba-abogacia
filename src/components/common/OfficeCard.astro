@@ -28,7 +28,7 @@ const linkClasses =
     {phone && (
       <p class="mt-1">
         Teléfono:{" "}
-        <a href={phoneHref ?? `tel:${phone}`} class={linkClasses}>
+        <a href={phoneHref ?? `tel:${phone}`} class={linkClasses} data-track="phone_click">
           {phone}
         </a>
       </p>
@@ -36,7 +36,7 @@ const linkClasses =
     {email && (
       <p class="mt-1">
         Email:{" "}
-        <a href={`mailto:${email}`} class={linkClasses}>
+        <a href={`mailto:${email}`} class={linkClasses} data-track="email_click">
           {email}
         </a>
       </p>

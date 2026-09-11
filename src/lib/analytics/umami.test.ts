@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { loadAnalytics, trackContactFormResult } from "./umami";
+import { loadAnalytics, trackContactFormResult, trackEvent } from "./umami";
 
 declare global {
   interface Window {
@@ -47,5 +47,33 @@ describe("trackContactFormResult", () => {
     delete window.umami;
 
     expect(() => trackContactFormResult({ status: "success" })).not.toThrow();
+  });
+});
+
+describe("trackEvent (design decision #8: generic click-tracking events)", () => {
+  it("fires a named event with no additional payload argument", () => {
+    const track = vi.fn();
+    window.umami = { track };
+
+    trackEvent("phone_click");
+
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith("phone_click");
+  });
+
+  it("fires a different event name verbatim (triangulation)", () => {
+    const track = vi.fn();
+    window.umami = { track };
+
+    trackEvent("appointment_click");
+
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith("appointment_click");
+  });
+
+  it("does nothing when the Umami script has not loaded (no window.umami)", () => {
+    delete window.umami;
+
+    expect(() => trackEvent("email_click")).not.toThrow();
   });
 });

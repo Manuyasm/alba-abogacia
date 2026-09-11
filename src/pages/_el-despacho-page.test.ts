@@ -162,4 +162,16 @@ describe("el-despacho.astro (page composition)", () => {
 
     expect(ctaSection).toMatch(/<a[^>]*href="\/contacto"[^>]*>\s*Solicitar consulta\s*<\/a>/);
   });
+
+  // animations-v2 PR E, design decision #8: click-tracking wiring.
+  it("marks the closing CTA with the appointment_click data-track hook", async () => {
+    const html = await renderElDespacho();
+
+    const ctaStart = html.indexOf("Hablemos de su situación");
+    const ctaSection = html.slice(ctaStart);
+
+    expect(ctaSection).toMatch(
+      /<a[^>]*href="\/contacto"[^>]*data-track="appointment_click"[^>]*>\s*Solicitar consulta\s*<\/a>/,
+    );
+  });
 });

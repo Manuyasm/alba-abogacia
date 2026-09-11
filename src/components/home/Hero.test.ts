@@ -80,4 +80,15 @@ describe("Hero", () => {
     expect(html).toContain("--hero-delay:150ms");
     expect(html).toContain("--hero-delay:300ms");
   });
+
+  // animations-v2 PR E, design decision #8: click-tracking wiring — the
+  // "Contactar" CTA carries the `[data-track]` hook `click-tracking.ts` reads.
+  it("marks the 'Contactar' CTA with the appointment_click data-track hook", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(Hero, {
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    expect(html).toMatch(/<a[^>]*href="#contacto"[^>]*data-track="appointment_click"[^>]*>\s*Contactar/);
+  });
 });
