@@ -307,3 +307,61 @@ describe("ContactForm submission (mocked fetch — no real /api/contacto in this
     expect(trackContactFormResult).toHaveBeenCalledWith({ status: "error" });
   });
 });
+
+describe("ContactForm loading and result-message motion (spec: 'Submit-Button Loading State', 'Result-Message Fade-In Without Announcement Delay')", () => {
+  it("keeps the submit button disabled and aria-busy for the full in-flight duration, then updates immediately once the response resolves — never gated behind an animation", async () => {
+    let resolveFetch: (value: unknown) => void = () => {};
+    const pending = new Promise((resolve) => {
+      resolveFetch = resolve;
+    });
+    const fetchMock = vi.fn().mockReturnValue(pending);
+    vi.stubGlobal("fetch", fetchMock);
+    const { container } = render(<ContactForm />);
+
+    fillValidVisibleFields();
+    solveCapWidget(container);
+    fireEvent.click(screen.getByRole("button", { name: SUBMIT_BUTTON_NAME }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const submitButton = screen.getByRole("button", { name: /enviando/i });
+    expect(submitButton).toBeDisabled();
+    expect(submitButton).toHaveAttribute("aria-busy", "true");
+
+    await act(async () => {
+      resolveFetch({ ok: true, json: async () => ({}) });
+      await pending;
+    });
+
+    // Asserted immediately after the microtask flush above — no `waitFor`
+    // polling — so a future regression that gates the text behind an
+    // animation's `transitionend`/`setTimeout` would fail this assertion.
+    expect(screen.getByRole("status")).toHaveTextContent(/gracias por su mensaje/i);
+    expect(screen.getByRole("button", { name: SUBMIT_BUTTON_NAME })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: SUBMIT_BUTTON_NAME })).toHaveAttribute(
+      "aria-busy",
+      "false",
+    );
+  });
+
+  it("renders the full error message text synchronously on a non-2xx response, not gated behind an animation", async () => {
+    let resolveFetch: (value: unknown) => void = () => {};
+    const pending = new Promise((resolve) => {
+      resolveFetch = resolve;
+    });
+    const fetchMock = vi.fn().mockReturnValue(pending);
+    vi.stubGlobal("fetch", fetchMock);
+    const { container } = render(<ContactForm />);
+
+    fillValidVisibleFields();
+    solveCapWidget(container);
+    fireEvent.click(screen.getByRole("button", { name: SUBMIT_BUTTON_NAME }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      resolveFetch({ ok: false, status: 400, json: async () => ({ code: "VALIDATION" }) });
+      await pending;
+    });
+
+    expect(screen.getByRole("alert")).toHaveTextContent(/no se ha podido enviar/i);
+  });
+});

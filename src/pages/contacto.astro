@@ -17,11 +17,14 @@ const COLEGIADA_NUMBER = "{{COLEGIADA_NUMBER}}";
   <main class="mx-auto max-w-3xl px-4 py-16">
     <ContactForm client:idle />
 
-    <address class="mt-12 border-t border-border pt-8 text-sm not-italic text-muted">
+    <address class="mt-12 border-t border-border pt-8 text-sm not-italic text-muted" data-reveal>
       <p>{OFFICE_ADDRESS_LANGREO}</p>
       <p class="mt-1">
         Teléfono:
-        <a href={`tel:${OFFICE_PHONE}`} class="font-medium text-brand-red underline underline-offset-2">
+        <a
+          href={`tel:${OFFICE_PHONE}`}
+          class="font-medium text-brand-red underline underline-offset-2 transition-interactive motion-reduce:transition-none hover:text-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
+        >
           {OFFICE_PHONE}
         </a>
       </p>

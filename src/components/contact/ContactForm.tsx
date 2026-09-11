@@ -447,7 +447,7 @@ export function ContactForm({ className }: ContactFormProps) {
           <p
             role="alert"
             aria-live="assertive"
-            className="rounded-md border border-error bg-error/10 px-4 py-3 text-sm text-error"
+            className="animate-fade-in motion-reduce:animate-none rounded-md border border-error bg-error/10 px-4 py-3 text-sm text-error"
           >
             {serverError}
           </p>
@@ -456,7 +456,7 @@ export function ContactForm({ className }: ContactFormProps) {
           <p
             role="status"
             aria-live="polite"
-            className="rounded-md border border-success bg-success/10 px-4 py-3 text-sm text-success"
+            className="animate-fade-in motion-reduce:animate-none rounded-md border border-success bg-success/10 px-4 py-3 text-sm text-success"
           >
             {successMessage}
           </p>
@@ -467,7 +467,7 @@ export function ContactForm({ className }: ContactFormProps) {
           disabled={isSubmitting}
           aria-busy={isSubmitting}
           className={cx(
-            "inline-flex min-h-11 items-center justify-center rounded-md bg-brand-red px-6 py-3 font-medium text-paper transition-colors duration-200 motion-reduce:transition-none hover:bg-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2",
+            "inline-flex min-h-11 items-center justify-center rounded-md bg-brand-red px-6 py-3 font-medium text-paper transition-interactive motion-reduce:transition-none hover:bg-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2",
             "disabled:cursor-not-allowed disabled:opacity-60",
           )}
         >
