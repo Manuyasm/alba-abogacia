@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+/*
+ * Brand tokens per DESIGN.md §3.1 (preliminary palette, pending validation against
+ * the original vector art) and §3.3 (typography). Exposed as Tailwind v4 theme
+ * variables via `@theme` so utility classes (e.g. `bg-brand-red`, `font-heading`)
+ * are generated directly from these tokens instead of a separate config file.
+ */
+@theme {
+  --color-brand-red: #b53837;
+  --color-brand-red-dark: #922b2c;
+  --color-brand-brown: #673f24;
+  --color-cream: #fbf2db;
+  --color-cream-deep: #f5e5bc;
+  --color-paper: #fffefc;
+  --color-ink: #211b18;
+  --color-muted: #675f5a;
+  --color-border: #e4ddd5;
+  --color-success: #236a49;
+  --color-error: #a82424;
+
+  --font-heading: "Source Serif 4", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+}
