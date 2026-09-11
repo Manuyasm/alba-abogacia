@@ -45,4 +45,17 @@ describe("SiteFooter", () => {
     expect(html).toContain('href="/contacto"');
     expect(html).toContain('href="/politica-privacidad"');
   });
+
+  // Design decision #3 (animations-v2): same real client logo as
+  // `SiteHeader.astro`, never hotlinked to the Stitch mockup's Google CDN.
+  it("renders the real logo via astro:assets, never hotlinked to an external host", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(SiteFooter, {
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    expect(html).toMatch(/<img[^>]*alt="ALBA Abogacía &amp; Consulting"/);
+    expect(html).not.toContain("googleusercontent");
+    expect(html).not.toContain("aida-public");
+  });
 });
