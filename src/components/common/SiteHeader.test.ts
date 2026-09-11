@@ -48,6 +48,18 @@ describe("SiteHeader", () => {
     expect(html).not.toMatch(/<a href="\/contacto" aria-current="page"/);
   });
 
+  it("marks only the El despacho link with aria-current=page on /el-despacho", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(SiteHeader, {
+      request: new Request("https://alba-abogacia.es/el-despacho"),
+    });
+
+    expect(html).toMatch(/<a href="\/el-despacho" aria-current="page"[^>]*>\s*El despacho/);
+    expect(html).not.toMatch(/<a href="\/" aria-current="page"/);
+    expect(html).not.toMatch(/<a href="\/servicios" aria-current="page"/);
+    expect(html).not.toMatch(/<a href="\/contacto" aria-current="page"/);
+  });
+
   it("exposes a mobile nav disclosure via native details/summary with an accessible label", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(SiteHeader, {
