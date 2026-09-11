@@ -82,4 +82,17 @@ describe("SiteHeader", () => {
     expect(html).not.toContain("googleusercontent");
     expect(html).not.toContain("aida-public");
   });
+
+  // Design decision #7 (animations-v2, "Header compaction"): the header is
+  // sticky and never hidden, and a persistent desktop CTA stays reachable at
+  // all scroll positions.
+  it("carries the sticky-header hook and a persistent desktop 'Solicitar consulta' CTA", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(SiteHeader, {
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    expect(html).toMatch(/<header[^>]*data-header[^>]*>/);
+    expect(html).toMatch(/<a[^>]*href="\/contacto"[^>]*>\s*Solicitar consulta\s*<\/a>/);
+  });
 });

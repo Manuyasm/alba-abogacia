@@ -30,10 +30,17 @@ const linkClasses = (href: string) =>
     "hover:text-brand-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red",
     isActive(href) ? "text-brand-red underline underline-offset-4" : "text-ink",
   ].join(" ");
+
+// Design decision #7 (animations-v2, "Header compaction") — persistent
+// desktop CTA, copy reused verbatim from the existing `/servicios` and
+// `/el-despacho` closing CTAs. Hidden on mobile: the hamburger disclosure
+// below already exposes every nav destination, including Contacto.
+const primaryCtaClasses =
+  "hidden md:inline-flex min-h-[44px] items-center justify-center rounded-md bg-brand-red px-5 py-2 text-sm font-semibold text-paper transition-interactive motion-reduce:transition-none hover:bg-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red";
 ---
 
-<header class="border-b border-border bg-paper">
-  <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+<header class="site-header border-b border-border bg-paper" data-header>
+  <div class="site-header-bar mx-auto flex max-w-6xl items-center justify-between gap-4 px-4">
     <a
       href="/"
       class="flex items-center rounded-md transition-interactive motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
@@ -50,6 +57,8 @@ const linkClasses = (href: string) =>
         ))
       }
     </nav>
+
+    <a href="/contacto" class={primaryCtaClasses}>Solicitar consulta</a>
 
     <details class="md:hidden">
       <summary
