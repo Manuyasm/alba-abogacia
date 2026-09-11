@@ -18,9 +18,11 @@ const COLEGIADA_NUMBER = "{{COLEGIADA_NUMBER}}";
 
 <BaseLayout title="Contacto — ALBA Abogacía & Consulting">
   <main id="main-content" class="mx-auto max-w-3xl px-4 py-16">
-    <ContactForm client:idle />
+    <div data-reveal="fade-up">
+      <ContactForm client:idle />
+    </div>
 
-    <address class="mt-12 border-t border-border pt-8 text-sm not-italic text-muted" data-reveal>
+    <address class="mt-12 border-t border-border pt-8 text-sm not-italic text-muted" data-reveal="fade-up">
       <p>{langreo.addressLines[0]}</p>
       <p class="mt-1">
         Teléfono:

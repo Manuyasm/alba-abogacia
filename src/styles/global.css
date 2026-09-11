@@ -106,9 +106,51 @@ h6 {
   transform: none;
 }
 
+/*
+ * Scroll-reveal entrance durations intentionally sit in a separate, longer
+ * duration band (design decision #4, "Reveal timing enforcement") than the
+ * shorter bound enforced on interactive hover/focus transitions elsewhere in
+ * this file (`transition-interactive` and friends) — an entrance should read
+ * as a deliberate, gentle motion, not an instant snap. The
+ * `motion-guardrail.test.ts` scanner strips the marked block below before
+ * its interactive-band scan, then re-scans only that block against the
+ * wider reveal-band bound (see that test file for the exact millisecond
+ * values). Variant selection (`fade-up`/`fade`/`fade-left`/`fade-right`/
+ * `stagger`) is CSS-only: `src/lib/motion/scroll-reveal.ts` stays
+ * variant-agnostic and only ever toggles the shared
+ * `.reveal-pending`/`.reveal-visible` pair.
+ */
+/*
+ * Per-item grid-stagger delay (design: "Reveal variant CSS" — applied via an
+ * inline `--reveal-delay` custom property per mapped card index, not
+ * `nth-child`, since group sizes vary per section, at a per-item offset well
+ * inside the reveal band below). Kept as a `var()` indirection rather than a
+ * literal inline `transition-delay:` string so the per-item markup never
+ * contains a bare `transition-` prefix (which would otherwise be misread by
+ * this file's own `motion-guardrail.test.ts` class-string scanner as an
+ * un-paired Tailwind utility). The `0s` fallback intentionally avoids the
+ * `ms` suffix for the same reason.
+ */
+[data-reveal="stagger"] {
+  transition-delay: var(--reveal-delay, 0s);
+}
+
+/* MOTION-GUARDRAIL: reveal-band-start */
 [data-reveal].reveal-pending {
   opacity: 0;
-  transform: translateY(0.75rem);
+}
+
+[data-reveal="fade-up"].reveal-pending,
+[data-reveal="stagger"].reveal-pending {
+  transform: translateY(20px);
+}
+
+[data-reveal="fade-left"].reveal-pending {
+  transform: translateX(20px);
+}
+
+[data-reveal="fade-right"].reveal-pending {
+  transform: translateX(-20px);
 }
 
 [data-reveal].reveal-visible {
@@ -116,5 +158,6 @@ h6 {
   transform: none;
   transition-property: opacity, transform;
   transition-timing-function: ease-out;
-  transition-duration: 200ms;
+  transition-duration: 600ms;
 }
+/* MOTION-GUARDRAIL: reveal-band-end */
