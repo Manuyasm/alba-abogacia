@@ -1,0 +1,49 @@
+---
+// Spec: "Services Summary" — 4-6 `ServiceCard`s sourced from DESIGN.md §5's
+// confirmed practice-area taxonomy, each linking to plain `/servicios` (no
+// anchor fragment). Design: page-specific literal copy, no props (single
+// consumer, same rationale as `Hero.astro`). Each description is a fresh
+// problem-oriented sentence — no procedural/pricing/timing claims copied
+// from any mockup.
+import ServiceCard from "@/components/common/ServiceCard.astro";
+
+const SERVICES = [
+  {
+    title: "Derecho de familia",
+    description: "Separaciones, custodia y medidas para menores, con un acompañamiento centrado en reducir el conflicto.",
+  },
+  {
+    title: "Herencias y sucesiones",
+    description: "Aceptación, reparto y trámites de herencias, con orientación clara en cada paso del proceso.",
+  },
+  {
+    title: "Derecho laboral",
+    description: "Despidos, contratos y reclamaciones frente a la empresa, defendiendo sus derechos como trabajador.",
+  },
+  {
+    title: "Seguridad Social",
+    description: "Incapacidades, pensiones y prestaciones, gestionando recursos ante los organismos competentes.",
+  },
+  {
+    title: "Contratos y reclamaciones",
+    description: "Redacción, revisión y reclamación de contratos civiles y mercantiles con seguridad jurídica.",
+  },
+  {
+    title: "Consultoría financiera",
+    description: "Planificación y asesoramiento financiero para particulares y empresas, con criterios sólidos.",
+  },
+];
+---
+
+<section class="mx-auto max-w-6xl px-4 py-16" data-reveal>
+  <h2 class="font-heading text-3xl font-semibold text-brand-brown">Nuestros servicios</h2>
+  <ul class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {
+      SERVICES.map((service) => (
+        <li>
+          <ServiceCard title={service.title} description={service.description} href="/servicios" />
+        </li>
+      ))
+    }
+  </ul>
+</section>
