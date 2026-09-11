@@ -1,0 +1,35 @@
+---
+// Spec: "Process Steps" — exactly 3 generic engagement-process steps, with no
+// time-bound SLA claims or guarantees. Design: page-specific literal copy, no
+// props (single consumer, same rationale as `Hero.astro`). No response-time
+// promise or closed-quote guarantee is stated anywhere in this copy.
+const STEPS = [
+  {
+    title: "Consulta inicial",
+    description:
+      "Escuchamos su situación y analizamos las opciones disponibles para definir el mejor punto de partida.",
+  },
+  {
+    title: "Propuesta y estrategia",
+    description: "Le presentamos una propuesta clara con la estrategia y los pasos a seguir en su caso.",
+  },
+  {
+    title: "Acompañamiento",
+    description: "Le acompañamos durante todo el proceso, manteniéndole informado en cada fase.",
+  },
+];
+---
+
+<section class="mx-auto max-w-6xl px-4 py-16" data-reveal>
+  <h2 class="font-heading text-3xl font-semibold text-brand-brown">Cómo trabajamos</h2>
+  <ol class="mt-8 grid gap-6 sm:grid-cols-3">
+    {
+      STEPS.map((step) => (
+        <li class="flex flex-col gap-3 rounded-lg border border-border bg-paper p-6">
+          <h3 class="font-heading text-lg font-semibold text-ink">{step.title}</h3>
+          <p class="text-sm text-muted">{step.description}</p>
+        </li>
+      ))
+    }
+  </ol>
+</section>
