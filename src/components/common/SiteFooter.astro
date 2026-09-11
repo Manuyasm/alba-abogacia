@@ -1,0 +1,65 @@
+---
+import { OFFICES, SITE_NAME } from "@/lib/site-facts";
+
+// Structural route list, duplicated from `SiteHeader.astro` — see the
+// rationale comment there (2 consumers, 4 static entries, low drift risk).
+const NAV_LINKS = [
+  { href: "/", label: "Inicio" },
+  { href: "/servicios", label: "Servicios" },
+  { href: "/el-despacho", label: "El despacho" },
+  { href: "/contacto", label: "Contacto" },
+];
+
+// Spec: "Site Footer" — confirmed Langreo office contact only (memory
+// #2643). The Madrid office is intentionally NOT rendered here at all: the
+// generic `OfficeCard` component that will later render either office is
+// PR3's job, and even then only if a future page composes it in — per PR2's
+// resolved apply-time scope, this footer stays Langreo-only.
+const langreo = OFFICES.langreo;
+
+const footerLinkClasses =
+  "rounded-md text-ink transition-interactive motion-reduce:transition-none hover:text-brand-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red";
+---
+
+<footer class="mt-16 border-t border-border bg-cream">
+  <div class="mx-auto grid max-w-6xl gap-8 px-4 py-10 md:grid-cols-3">
+    <div>
+      <p class="font-heading text-lg font-semibold text-ink">{SITE_NAME}</p>
+      <address class="mt-3 text-sm not-italic text-muted">
+        <p>{langreo.addressLines[0]}</p>
+        <p class="mt-1">
+          Teléfono:{" "}
+          <a href={langreo.phoneHref} class={`font-medium text-brand-red underline underline-offset-2 transition-interactive motion-reduce:transition-none hover:text-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red`}>
+            {langreo.phone}
+          </a>
+        </p>
+        <p class="mt-1">
+          Email:{" "}
+          <a href={`mailto:${langreo.email}`} class={`font-medium text-brand-red underline underline-offset-2 transition-interactive motion-reduce:transition-none hover:text-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red`}>
+            {langreo.email}
+          </a>
+        </p>
+      </address>
+    </div>
+
+    <nav aria-label="Pie de página" class="text-sm">
+      <ul class="flex flex-col gap-2">
+        {
+          NAV_LINKS.map((link) => (
+            <li>
+              <a href={link.href} class={footerLinkClasses}>
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="text-sm">
+      <a href="/politica-privacidad" class={`underline underline-offset-2 ${footerLinkClasses}`}>
+        Política de privacidad
+      </a>
+    </div>
+  </div>
+</footer>

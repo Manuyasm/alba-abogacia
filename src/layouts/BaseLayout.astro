@@ -1,6 +1,8 @@
 ---
 import "@/styles/global.css";
 import { BRAND_NAME, OFFICES, PRIMARY_EMAIL } from "@/lib/site-facts";
+import SiteHeader from "@/components/common/SiteHeader.astro";
+import SiteFooter from "@/components/common/SiteFooter.astro";
 
 interface Props {
   title: string;
@@ -67,7 +69,9 @@ const organizationJsonLd = {
     >
       Saltar al contenido
     </a>
+    <SiteHeader />
     <slot />
+    <SiteFooter />
     <script>
       import "@/lib/motion/scroll-reveal";
     </script>
