@@ -1,25 +1,85 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { ContactForm } from "@/components/contact/ContactForm";
-import { SITE_NAME } from "@/lib/site-facts";
+import Hero from "@/components/home/Hero.astro";
+import ServicesSummary from "@/components/home/ServicesSummary.astro";
+import TeamTeaser from "@/components/home/TeamTeaser.astro";
+import ProcessSteps from "@/components/home/ProcessSteps.astro";
+import OfficeCard from "@/components/common/OfficeCard.astro";
+import FaqAccordion from "@/components/common/FaqAccordion.astro";
+import { OFFICES, SITE_NAME } from "@/lib/site-facts";
 
-// Scaffold placeholder: full home page content (hero, services, offices, FAQ,
-// etc. per DESIGN.md §6) remains out of scope for this change and will be
-// built incrementally in later work — this page still only proves the Astro
-// + Tailwind + SSR-adapter scaffold builds and renders under the new
-// SiteHeader/SiteFooter shell. The only additions in this PR are the
-// `id="main-content"` landmark (closing PR1's skip-link contract) and
-// sourcing the title/heading from `site-facts.ts` instead of a duplicated
-// literal — no new page content.
+// Spec: full Home page composition ("Hero Section" through "Contact
+// Section", "Content Integrity", "Accessibility and Motion"). Design:
+// `index.astro` is a thin composition root — `Hero`/`ServicesSummary`/
+// `TeamTeaser`/`ProcessSteps` (built and tested in PR1/PR2) plus inline
+// Offices/FAQ/contact-heading sections, in this exact order. Replaces the
+// PR1 placeholder scaffold entirely.
+const HOME_DESCRIPTION =
+  "Despacho de abogacía y consultoría en Langreo (Asturias) y Madrid: derecho de familia, laboral, herencias, contratos y consultoría financiera, con un trato cercano.";
+
+// FAQ copy: structural facts only (coverage area, how to request a
+// consultation, documentation guidance, combined jurídico+financiero scope) —
+// sourced from confirmed facts in `site-facts.ts` and the firm's actual
+// service scope. Excludes pricing, response-time promises, a no-cost-visit
+// claim (AGENTS.md §18), any bar-association credential number, and any
+// WhatsApp reference.
+const FAQ_ITEMS = [
+  {
+    question: "¿En qué zonas atienden?",
+    answer:
+      "Atendemos en Langreo (Asturias) y Madrid, tanto de forma presencial en nuestras oficinas como mediante consulta telemática.",
+  },
+  {
+    question: "¿Cómo puedo solicitar una consulta?",
+    answer:
+      "Puede solicitar una consulta a través del formulario de contacto de esta web, por teléfono o por correo electrónico; nos pondremos en contacto con usted para concretar los siguientes pasos.",
+  },
+  {
+    question: "¿Qué documentación necesito aportar?",
+    answer:
+      "La documentación necesaria depende de cada caso; en la primera toma de contacto le indicaremos qué documentos aportar según su situación.",
+  },
+  {
+    question: "¿Atienden tanto asuntos jurídicos como financieros?",
+    answer:
+      "Sí, combinamos asesoramiento jurídico y consultoría financiera para ofrecer una atención conjunta cuando el caso lo requiere.",
+  },
+];
 ---
 
-<BaseLayout title={SITE_NAME}>
-  <main id="main-content" class="mx-auto max-w-3xl px-4 py-16" data-reveal>
-    <h1 class="font-heading text-4xl text-brand-brown">{SITE_NAME}</h1>
-    <p class="mt-4 text-ink">Sitio en construcción.</p>
-  </main>
+<BaseLayout title={SITE_NAME} description={HOME_DESCRIPTION}>
+  <main id="main-content">
+    <Hero />
+    <ServicesSummary />
+    <TeamTeaser />
+    <ProcessSteps />
 
-  <section id="contacto" class="mx-auto max-w-3xl px-4 py-16" data-reveal>
-    <ContactForm client:idle />
-  </section>
+    <section class="mx-auto max-w-6xl px-4 py-16" data-reveal>
+      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Nuestras oficinas</h2>
+      <ul class="mt-8 grid gap-6 sm:grid-cols-2">
+        <li><OfficeCard {...OFFICES.langreo} /></li>
+        <li><OfficeCard {...OFFICES.madrid} /></li>
+      </ul>
+    </section>
+
+    <section class="mx-auto max-w-3xl px-4 py-16">
+      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Preguntas frecuentes</h2>
+      <!-- FaqAccordion already wraps itself in its own `data-reveal` div —
+           no `data-reveal` is added here to avoid double-nesting it. -->
+      <div class="mt-8">
+        <FaqAccordion items={FAQ_ITEMS} />
+      </div>
+    </section>
+
+    <section id="contacto" class="mx-auto max-w-3xl px-4 py-16" data-reveal>
+      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Solicite su consulta</h2>
+      <p class="mt-4 text-muted">
+        Cuéntenos su situación a través del siguiente formulario y nos pondremos en contacto con usted.
+      </p>
+      <div class="mt-8">
+        <ContactForm client:idle />
+      </div>
+    </section>
+  </main>
 </BaseLayout>
