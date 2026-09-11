@@ -1,0 +1,46 @@
+---
+// Spec: "OfficeCard Component" — renders address, phone, and email from
+// props, supporting either office (Langreo or Madrid) without hardcoding
+// either one's data. Props intentionally mirror `site-facts.ts`'s
+// `OfficeFact` shape (`addressLines`/`phone`/`phoneHref`/`email`) so a future
+// consumer can pass `OFFICES.langreo`/`OFFICES.madrid` directly — Madrid has
+// no confirmed phone or email, so both remain optional and are simply
+// omitted from the rendered markup when absent (never a fabricated value).
+interface Props {
+  name: string;
+  addressLines: string[];
+  phone?: string;
+  phoneHref?: string;
+  email?: string;
+  mapNote?: string;
+}
+
+const { name, addressLines, phone, phoneHref, email, mapNote } = Astro.props;
+
+const linkClasses =
+  "font-medium text-brand-red underline underline-offset-2 transition-interactive motion-reduce:transition-none hover:text-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red";
+---
+
+<div class="rounded-lg border border-border bg-paper p-6">
+  <p class="font-heading text-lg font-semibold text-ink">{name}</p>
+  <address class="mt-3 text-sm not-italic text-muted">
+    {addressLines.map((line) => <p>{line}</p>)}
+    {phone && (
+      <p class="mt-1">
+        Teléfono:{" "}
+        <a href={phoneHref ?? `tel:${phone}`} class={linkClasses}>
+          {phone}
+        </a>
+      </p>
+    )}
+    {email && (
+      <p class="mt-1">
+        Email:{" "}
+        <a href={`mailto:${email}`} class={linkClasses}>
+          {email}
+        </a>
+      </p>
+    )}
+  </address>
+  {mapNote && <p class="mt-3 text-xs text-muted">{mapNote}</p>}
+</div>

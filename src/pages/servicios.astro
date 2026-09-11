@@ -1,0 +1,223 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import ServiceDetailCard from "@/components/common/ServiceDetailCard.astro";
+import ProcessSteps from "@/components/common/ProcessSteps.astro";
+import FaqAccordion from "@/components/common/FaqAccordion.astro";
+import { SITE_NAME } from "@/lib/site-facts";
+
+// Spec: "Page Existence", "Service Taxonomy Consistency", "Two-Section
+// Structure", "ServiceDetailCard Component", "ProcessSteps Promotion",
+// "Servicios FAQ", "Closing CTA", "Content Integrity", "Accessibility and
+// Navigation State". Design: flat static page, two always-visible sections
+// (Jurídico/Financiero) built on `ServiceDetailCard`, the promoted
+// `ProcessSteps`, a page-local `FaqAccordion`, and a closing CTA to
+// `/contacto`. All copy below is literal and structural-facts-only (no
+// pricing/SLA/colegiada/testimonials) — matches the design's Content Audit
+// Table verbatim. The 6 category titles exactly match
+// `ServicesSummary.astro`'s Home taxonomy (Service Taxonomy Consistency).
+const SERVICIOS_DESCRIPTION =
+  "Servicios jurídicos y de consultoría financiera en Langreo (Asturias) y Madrid: derecho de familia, herencias, laboral, Seguridad Social, contratos y consultoría financiera.";
+
+interface ServiceDetail {
+  title: string;
+  description: string;
+  scopeItems: string[];
+  ctaLabel: string;
+  ctaHref: string;
+}
+
+const JURIDICO: ServiceDetail[] = [
+  {
+    title: "Derecho de familia",
+    description:
+      "Le acompañamos en separaciones, divorcios, custodia y medidas relativas a los hijos, buscando siempre reducir el conflicto y proteger el interés de la familia. También atendemos procesos de mediación familiar cuando las partes buscan un acuerdo.",
+    scopeItems: [
+      "Separaciones y divorcios, de mutuo acuerdo o contenciosos",
+      "Custodia, régimen de visitas y pensión de alimentos",
+      "Mediación familiar para alcanzar acuerdos",
+    ],
+    ctaLabel: "Consultar sobre derecho de familia",
+    ctaHref: "/contacto",
+  },
+  {
+    title: "Herencias y sucesiones",
+    description:
+      "Le orientamos en la aceptación, partición y reparto de herencias, así como en los trámites notariales y fiscales que conlleva un proceso sucesorio. Resolvemos sus dudas sobre testamentos y sobre qué documentación necesitará en cada fase.",
+    scopeItems: [
+      "Aceptación y renuncia de herencia",
+      "Partición y reparto entre herederos",
+      "Testamentos y trámites notariales",
+    ],
+    ctaLabel: "Consultar sobre herencias y sucesiones",
+    ctaHref: "/contacto",
+  },
+  {
+    title: "Derecho laboral",
+    description:
+      "Defendemos sus derechos como trabajador ante despidos, modificaciones de condiciones o incumplimientos de la empresa, y le asesoramos en la revisión de contratos laborales. Le explicamos las opciones disponibles antes de iniciar cualquier reclamación.",
+    scopeItems: [
+      "Despidos y reclamaciones frente a la empresa",
+      "Revisión y negociación de contratos laborales",
+      "Modificaciones de condiciones de trabajo",
+    ],
+    ctaLabel: "Consultar sobre derecho laboral",
+    ctaHref: "/contacto",
+  },
+  {
+    title: "Seguridad Social",
+    description:
+      "Le ayudamos a gestionar incapacidades, pensiones y prestaciones ante los organismos de la Seguridad Social, incluyendo los recursos frente a resoluciones desfavorables. Le indicamos qué documentación aportar según su situación.",
+    scopeItems: [
+      "Incapacidad permanente y temporal",
+      "Pensiones y prestaciones",
+      "Recursos ante resoluciones denegatorias",
+    ],
+    ctaLabel: "Consultar sobre Seguridad Social",
+    ctaHref: "/contacto",
+  },
+];
+
+// Financiero card 1 scope item 3: reworded from the design's draft
+// ("negociación de condiciones y garantías") to "Negociación de condiciones
+// contractuales" — the shared forbidden-pattern regex (`/garant[ií]a/i`)
+// targets results/outcome guarantee claims, and this reword removes any
+// ambiguity while keeping the contract-law meaning intact (design's mandatory
+// reword, applied before the content-integrity test below).
+const FINANCIERO: ServiceDetail[] = [
+  {
+    title: "Contratos y reclamaciones",
+    description:
+      "Redactamos, revisamos y gestionamos reclamaciones sobre contratos civiles y mercantiles, aportando seguridad jurídica a sus acuerdos y operaciones. Le ayudamos a identificar riesgos antes de firmar y a reclamar cuando un contrato no se cumple.",
+    scopeItems: [
+      "Redacción y revisión de contratos civiles y mercantiles",
+      "Reclamaciones por incumplimiento contractual",
+      "Negociación de condiciones contractuales",
+    ],
+    ctaLabel: "Consultar sobre contratos y reclamaciones",
+    ctaHref: "/contacto",
+  },
+  {
+    title: "Consultoría financiera",
+    description:
+      "Ofrecemos planificación y asesoramiento financiero a particulares y empresas, con criterios sólidos adaptados a cada situación. Le ayudamos a organizar su información financiera antes de tomar decisiones importantes.",
+    scopeItems: [
+      "Planificación financiera personal y empresarial",
+      "Análisis de situación patrimonial",
+      "Asesoramiento previo a decisiones financieras",
+    ],
+    ctaLabel: "Consultar sobre consultoría financiera",
+    ctaHref: "/contacto",
+  },
+];
+
+// FAQ copy: fresh, structural facts only (scope differentiation,
+// litigation-vs-non-litigation, service combination, remote availability) —
+// written for this page, not derived from any mockup. Excludes pricing,
+// response-time promises, "consulta gratuita", any credential number, and any
+// WhatsApp reference.
+const FAQ_ITEMS = [
+  {
+    question: "¿Qué diferencia hay entre un asunto jurídico y uno financiero?",
+    answer:
+      "Un asunto jurídico implica una cuestión legal, como una separación, una herencia o una reclamación laboral, mientras que la consultoría financiera se centra en la planificación y el análisis de su situación económica. En muchos casos ambos aspectos están relacionados y los abordamos de forma conjunta.",
+  },
+  {
+    question: "¿Es necesario acudir a juicio para resolver mi situación?",
+    answer:
+      "No siempre. Muchos asuntos se resuelven mediante acuerdo, mediación o negociación con la otra parte, sin necesidad de un procedimiento judicial. En la primera toma de contacto valoramos qué vía es más adecuada para su caso.",
+  },
+  {
+    question: "¿Puedo combinar varios servicios si mi situación lo requiere?",
+    answer:
+      "Sí. Es habitual que un mismo asunto tenga implicaciones jurídicas y financieras a la vez, por ejemplo en herencias o separaciones, y coordinamos ambos servicios para ofrecerle una atención conjunta.",
+  },
+  {
+    question: "¿Puedo recibir asesoramiento de forma telemática?",
+    answer:
+      "Sí, atendemos tanto de forma presencial en nuestras oficinas de Langreo (Asturias) y Madrid como mediante consulta telemática, según le resulte más cómodo.",
+  },
+];
+
+// Button classes follow DESIGN.md §7.1 (same primary-CTA treatment as
+// `Hero.astro`'s "Contactar" button): red background/white text, 44px
+// minimum tap height, hover/focus-visible states.
+const primaryCtaClasses =
+  "inline-flex min-h-[44px] items-center justify-center rounded-md bg-brand-red px-6 py-2 text-sm font-semibold text-paper transition-interactive motion-reduce:transition-none hover:bg-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red";
+
+const jumpLinkClasses =
+  "text-sm font-semibold text-brand-red underline underline-offset-4 transition-interactive motion-reduce:transition-none hover:text-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red";
+---
+
+<BaseLayout title={`Servicios | ${SITE_NAME}`} description={SERVICIOS_DESCRIPTION}>
+  <main id="main-content">
+    <section class="mx-auto max-w-6xl px-4 py-16" data-reveal>
+      <h1 class="font-heading text-4xl font-semibold text-brand-brown sm:text-5xl">
+        Servicios jurídicos y de consultoría financiera
+      </h1>
+      <p class="mt-4 max-w-2xl text-lg text-muted">
+        En Alba Abogacía &amp; Consulting combinamos asesoramiento jurídico y consultoría financiera para
+        acompañarle en cada etapa de su situación, ya sea personal o empresarial.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-4">
+        <a href="#area-juridica" class={jumpLinkClasses}>Área jurídica</a>
+        <a href="#area-financiera" class={jumpLinkClasses}>Área financiera</a>
+      </div>
+    </section>
+
+    <section id="area-juridica" class="mx-auto max-w-6xl px-4 py-16" data-reveal>
+      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Área jurídica</h2>
+      <ul class="mt-8 grid gap-6 sm:grid-cols-2">
+        {
+          JURIDICO.map((service) => (
+            <ServiceDetailCard
+              title={service.title}
+              description={service.description}
+              scopeItems={service.scopeItems}
+              ctaLabel={service.ctaLabel}
+              ctaHref={service.ctaHref}
+            />
+          ))
+        }
+      </ul>
+    </section>
+
+    <section id="area-financiera" class="mx-auto max-w-6xl px-4 py-16" data-reveal>
+      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Área financiera</h2>
+      <ul class="mt-8 grid gap-6 sm:grid-cols-2">
+        {
+          FINANCIERO.map((service) => (
+            <ServiceDetailCard
+              title={service.title}
+              description={service.description}
+              scopeItems={service.scopeItems}
+              ctaLabel={service.ctaLabel}
+              ctaHref={service.ctaHref}
+            />
+          ))
+        }
+      </ul>
+    </section>
+
+    <ProcessSteps />
+
+    <section class="mx-auto max-w-3xl px-4 py-16">
+      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Preguntas frecuentes</h2>
+      <!-- FaqAccordion already wraps itself in its own `data-reveal` div —
+           no `data-reveal` is added here to avoid double-nesting it. -->
+      <div class="mt-8">
+        <FaqAccordion items={FAQ_ITEMS} />
+      </div>
+    </section>
+
+    <section class="mx-auto max-w-3xl px-4 py-16" data-reveal>
+      <h2 class="font-heading text-3xl font-semibold text-brand-brown">¿Necesita asesoramiento?</h2>
+      <p class="mt-4 text-muted">
+        Cuéntenos su situación y le indicaremos cómo podemos ayudarle, tanto en el ámbito jurídico como en el
+        financiero.
+      </p>
+      <div class="mt-8">
+        <a href="/contacto" class={primaryCtaClasses}>Solicitar consulta</a>
+      </div>
+    </section>
+  </main>
+</BaseLayout>

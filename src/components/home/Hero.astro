@@ -1,0 +1,29 @@
+---
+// Spec: "Hero Section" — real Spanish headline/subheadline stating the
+// firm's legal + financial-consulting value proposition, dual CTA
+// (`#contacto` anchor + `/servicios` link), no fabricated stats or
+// stock/placeholder imagery. Design: page-specific literal copy, no props
+// (single consumer — `src/pages/index.astro` — not cross-page data like
+// `site-facts.ts`). Button classes follow DESIGN.md §7.1: primary = red
+// background/white text, secondary = transparent background/brown border,
+// both with a 44px minimum tap height and hover/focus-visible states.
+const primaryCtaClasses =
+  "inline-flex min-h-[44px] items-center justify-center rounded-md bg-brand-red px-6 py-2 text-sm font-semibold text-paper transition-interactive motion-reduce:transition-none hover:bg-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red";
+
+const secondaryCtaClasses =
+  "inline-flex min-h-[44px] items-center justify-center rounded-md border border-brand-brown bg-transparent px-6 py-2 text-sm font-semibold text-brand-brown transition-interactive motion-reduce:transition-none hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red";
+---
+
+<section class="mx-auto max-w-6xl px-4 py-16" data-reveal>
+  <h1 class="font-heading text-4xl font-semibold text-brand-brown sm:text-5xl">
+    Asesoramiento jurídico y financiero claro, en Asturias y Madrid
+  </h1>
+  <p class="mt-4 max-w-2xl text-lg text-muted">
+    En Alba Abogacía &amp; Consulting resolvemos cuestiones de familia, herencias, laboral y contratos, junto con
+    consultoría financiera, con un trato cercano y explicaciones comprensibles.
+  </p>
+  <div class="mt-8 flex flex-wrap gap-4">
+    <a href="#contacto" class={primaryCtaClasses}>Contactar</a>
+    <a href="/servicios" class={secondaryCtaClasses}>Conocer los servicios</a>
+  </div>
+</section>

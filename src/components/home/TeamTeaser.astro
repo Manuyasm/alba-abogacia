@@ -1,0 +1,37 @@
+---
+// Spec: "Team Teaser" — a `TeamCard` per confirmed team member with name and
+// generic role only (no bio, no photo), linking the teaser to `/el-despacho`.
+// Design: page-specific literal copy, no props (single consumer, same
+// rationale as `Hero.astro`/`ServicesSummary.astro`). Team names/roles
+// (Verónica Alba Suárez — Abogada; Aitor Domínguez López — Consultor
+// financiero) are explicitly user-authorized for this change — do not
+// re-flag or defer. No `bio`/photo prop is passed: `TeamCard` has no photo
+// prop at all today, and omitting `bio` keeps this teaser bio-free per spec.
+import TeamCard from "@/components/common/TeamCard.astro";
+
+const TEAM = [
+  { name: "Verónica Alba Suárez", role: "Abogada" },
+  { name: "Aitor Domínguez López", role: "Consultor financiero" },
+];
+---
+
+<section class="mx-auto max-w-6xl px-4 py-16" data-reveal>
+  <h2 class="font-heading text-3xl font-semibold text-brand-brown">Quién le atiende</h2>
+  <ul class="mt-8 grid gap-6 sm:grid-cols-2">
+    {
+      TEAM.map((member) => (
+        <li>
+          <TeamCard name={member.name} role={member.role} />
+        </li>
+      ))
+    }
+  </ul>
+  <div class="mt-8">
+    <a
+      href="/el-despacho"
+      class="font-semibold text-brand-red transition-interactive motion-reduce:transition-none hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
+    >
+      Conocer al despacho
+    </a>
+  </div>
+</section>
