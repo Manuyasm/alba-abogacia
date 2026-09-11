@@ -1,31 +1,34 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { ContactForm } from "@/components/contact/ContactForm";
+import { OFFICES } from "@/lib/site-facts";
 
-// Office address/phone confirmed by the client 2026-09-10 (chat). Colegiada
-// number remains an unconfirmed client fact — named placeholder only.
-// Madrid office (C/ Bravo Murillo, nº 377, 2º, Madrid) is also confirmed but
-// not yet shown on this page — this page currently only renders one office
-// block; adding the second office is a page-content scope decision, not a
-// mechanical placeholder fill, left for a future change.
-const OFFICE_ADDRESS_LANGREO = "C/ Inventor La Cierva, nº 22, 1º A, C.P. 33930, Langreo, Principado de Asturias";
-const OFFICE_PHONE = "985694493";
+// Langreo office address/phone are now sourced from `site-facts.ts` (single
+// source of truth, per design's "Contact-fact storage" decision) instead of
+// page-local constants — this page was the reason that module was created in
+// the first place. Colegiada number remains an unconfirmed client fact — a
+// named placeholder only, and stays page-local since it isn't a site-wide
+// fact in `site-facts.ts`. Madrid office (`OFFICES.madrid`) is also confirmed
+// but not yet shown on this page — adding the second office is a
+// page-content scope decision, not a mechanical placeholder fill, left for a
+// future change.
+const langreo = OFFICES.langreo;
 const COLEGIADA_NUMBER = "{{COLEGIADA_NUMBER}}";
 ---
 
 <BaseLayout title="Contacto — ALBA Abogacía & Consulting">
-  <main class="mx-auto max-w-3xl px-4 py-16">
+  <main id="main-content" class="mx-auto max-w-3xl px-4 py-16">
     <ContactForm client:idle />
 
     <address class="mt-12 border-t border-border pt-8 text-sm not-italic text-muted" data-reveal>
-      <p>{OFFICE_ADDRESS_LANGREO}</p>
+      <p>{langreo.addressLines[0]}</p>
       <p class="mt-1">
         Teléfono:
         <a
-          href={`tel:${OFFICE_PHONE}`}
+          href={langreo.phoneHref}
           class="font-medium text-brand-red underline underline-offset-2 transition-interactive motion-reduce:transition-none hover:text-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
         >
-          {OFFICE_PHONE}
+          {langreo.phone}
         </a>
       </p>
       <p class="mt-1">Colegiada n.º {COLEGIADA_NUMBER}</p>

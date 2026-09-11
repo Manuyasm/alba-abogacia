@@ -1,20 +1,24 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import { PRIMARY_EMAIL } from "@/lib/site-facts";
 
 // RGPD (UE) 2016/679 / LOPDGDD 3/2018 — borrador pendiente de revisión legal
 // final y de confirmación del cliente antes de publicación (spec: la casilla
 // de consentimiento del formulario de contacto enlaza a esta página; PR4
 // scope note). Los marcadores de posición siguientes NO deben sustituirse
 // por datos inventados: deben confirmarse con el cliente/asesoría legal.
+// Ambos siguen siendo locales a esta página: son específicos del borrador
+// legal, no hechos de todo el sitio como los de `site-facts.ts`.
 const DATA_CONTROLLER_LEGAL_NAME = "{{DATA_CONTROLLER_LEGAL_NAME}}";
 const RETENTION_PERIOD = "{{RETENTION_PERIOD}}";
-// Confirmed by the client 2026-09-10 (chat) as the contact point for exercising
-// data-subject rights.
-const DATA_RIGHTS_CONTACT = "info@alba-abogacia.es";
+// Contact point for exercising data-subject rights — now sourced from
+// `site-facts.ts` (`PRIMARY_EMAIL`) instead of a page-local literal, since it
+// is the same confirmed email used site-wide (footer, JSON-LD).
+const DATA_RIGHTS_CONTACT = PRIMARY_EMAIL;
 ---
 
 <BaseLayout title="Política de privacidad — ALBA Abogacía & Consulting">
-  <main class="mx-auto max-w-3xl px-4 py-16 text-ink" data-reveal>
+  <main id="main-content" class="mx-auto max-w-3xl px-4 py-16 text-ink" data-reveal>
     <h1 class="font-heading text-3xl text-brand-brown">Política de privacidad</h1>
 
     <p

@@ -1,18 +1,21 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { ContactForm } from "@/components/contact/ContactForm";
+import { SITE_NAME } from "@/lib/site-facts";
 
 // Scaffold placeholder: full home page content (hero, services, offices, FAQ,
 // etc. per DESIGN.md §6) remains out of scope for this change and will be
 // built incrementally in later work — this page still only proves the Astro
-// + Tailwind + SSR-adapter scaffold builds and renders. The only addition in
-// this PR is the reusable contact section (design rev.2: "mounted ...
-// embedded inside src/pages/index.astro's id=\"contacto\" section").
+// + Tailwind + SSR-adapter scaffold builds and renders under the new
+// SiteHeader/SiteFooter shell. The only additions in this PR are the
+// `id="main-content"` landmark (closing PR1's skip-link contract) and
+// sourcing the title/heading from `site-facts.ts` instead of a duplicated
+// literal — no new page content.
 ---
 
-<BaseLayout title="ALBA Abogacía & Consulting">
-  <main class="mx-auto max-w-3xl px-4 py-16" data-reveal>
-    <h1 class="font-heading text-4xl text-brand-brown">ALBA Abogacía &amp; Consulting</h1>
+<BaseLayout title={SITE_NAME}>
+  <main id="main-content" class="mx-auto max-w-3xl px-4 py-16" data-reveal>
+    <h1 class="font-heading text-4xl text-brand-brown">{SITE_NAME}</h1>
     <p class="mt-4 text-ink">Sitio en construcción.</p>
   </main>
 
