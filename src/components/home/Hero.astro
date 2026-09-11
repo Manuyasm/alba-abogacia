@@ -7,23 +7,50 @@
 // `site-facts.ts`). Button classes follow DESIGN.md §7.1: primary = red
 // background/white text, secondary = transparent background/brown border,
 // both with a 44px minimum tap height and hover/focus-visible states.
+//
+// PR C ("Comprehensive Motion System v2"): two-column layout with a
+// load-triggered (not scroll-triggered) entrance sequence. The hero sits
+// above the fold and is always visible on first paint, so it uses a plain
+// CSS `animation` sequence (`.hero-stagger`/`.hero-photo` in global.css,
+// MOTION-GUARDRAIL reveal-band) instead of the IntersectionObserver-driven
+// `[data-reveal]` system used further down the page. Every element exists
+// and is fully visible in the rendered HTML with no JS involved — the
+// animation is a pure entrance flourish, not a visibility mechanism, and
+// collapses via the existing global `prefers-reduced-motion` override.
+// Photo: honest, generic placeholder landed in PR A (design decision #2/#3
+// — no real-person/real-place claim); zoom scale(1.025)→scale(1) on load.
+import { Image } from "astro:assets";
+import heroImage from "@/assets/placeholder/hero.jpg";
+
 const primaryCtaClasses =
-  "inline-flex min-h-[44px] items-center justify-center rounded-md bg-brand-red px-6 py-2 text-sm font-semibold text-paper transition-interactive motion-reduce:transition-none hover:bg-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red";
+  "btn-primary inline-flex min-h-[44px] items-center justify-center rounded-md bg-brand-red px-6 py-2 text-sm font-semibold text-paper transition-interactive motion-reduce:transition-none hover:bg-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red";
 
 const secondaryCtaClasses =
   "inline-flex min-h-[44px] items-center justify-center rounded-md border border-brand-brown bg-transparent px-6 py-2 text-sm font-semibold text-brand-brown transition-interactive motion-reduce:transition-none hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red";
 ---
 
-<section class="mx-auto max-w-6xl px-4 py-16" data-reveal>
-  <h1 class="font-heading text-4xl font-semibold text-brand-brown sm:text-5xl">
-    Asesoramiento jurídico y financiero claro, en Asturias y Madrid
-  </h1>
-  <p class="mt-4 max-w-2xl text-lg text-muted">
-    En Alba Abogacía &amp; Consulting resolvemos cuestiones de familia, herencias, laboral y contratos, junto con
-    consultoría financiera, con un trato cercano y explicaciones comprensibles.
-  </p>
-  <div class="mt-8 flex flex-wrap gap-4">
-    <a href="#contacto" class={primaryCtaClasses}>Contactar</a>
-    <a href="/servicios" class={secondaryCtaClasses}>Conocer los servicios</a>
+<section class="mx-auto max-w-6xl px-4 py-16">
+  <div class="grid gap-10 lg:grid-cols-2 lg:items-center">
+    <div class="hero-stagger flex flex-col items-start">
+      <h1 class="font-heading text-4xl font-semibold text-brand-brown sm:text-5xl">
+        Asesoramiento jurídico y financiero claro, en Asturias y Madrid
+      </h1>
+      <p class="mt-4 max-w-2xl text-lg text-muted" style="--hero-delay:150ms">
+        En Alba Abogacía &amp; Consulting resolvemos cuestiones de familia, herencias, laboral y contratos, junto con
+        consultoría financiera, con un trato cercano y explicaciones comprensibles.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-4" style="--hero-delay:300ms">
+        <a href="#contacto" class={primaryCtaClasses}>Contactar</a>
+        <a href="/servicios" class={secondaryCtaClasses}>Conocer los servicios</a>
+      </div>
+    </div>
+    <div class="overflow-hidden rounded-lg">
+      <Image
+        src={heroImage}
+        alt="Fotografía genérica de un despacho, usada como imagen provisional."
+        class="hero-photo h-full w-full object-cover"
+        widths={[400, 800]}
+      />
+    </div>
   </div>
 </section>

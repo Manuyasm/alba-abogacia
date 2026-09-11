@@ -28,15 +28,56 @@ describe("Hero", () => {
     expect(html).toMatch(/<a[^>]*href="\/servicios"[^>]*>/);
   });
 
-  it("contains no fabricated numeric stat claims or images", async () => {
+  it("contains no fabricated numeric stat claims", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Hero, {
       request: new Request("https://alba-abogacia.es/"),
     });
 
+    // Strip <img> tags first: the optimized `astro:assets` URL contains
+    // percent-encoded query params (e.g. "...512%26origHeight...") whose
+    // digit-then-"%" byte sequences are encoding artifacts, not a rendered
+    // percentage stat claim in visible copy.
+    const htmlWithoutImageTags = html.replace(/<img[^>]*>/gi, "");
+
     // No "<digits>% " / "<digits> años" style stat pattern.
-    expect(html).not.toMatch(/\d+\s*%/);
-    expect(html).not.toMatch(/\d+\s*años/i);
-    expect(html).not.toMatch(/<img/i);
+    expect(htmlWithoutImageTags).not.toMatch(/\d+\s*%/);
+    expect(htmlWithoutImageTags).not.toMatch(/\d+\s*años/i);
+  });
+
+  // PR C ("Comprehensive Motion System v2"): the hero now wires in the
+  // honest, generic placeholder photo landed in PR A (design decision #2/#3
+  // — no real-person/real-place claim, must stay a single honestly-labeled
+  // image, not a fabricated stock/stat visual).
+  it("renders exactly one honestly-labeled placeholder photo, no real-place/person claim", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(Hero, {
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    const imgMatches = html.match(/<img[^>]*>/g) ?? [];
+    expect(imgMatches).toHaveLength(1);
+    expect(imgMatches[0]).toContain(
+      'alt="Fotografía genérica de un despacho, usada como imagen provisional."',
+    );
+  });
+
+  // PR C: entrance fires on page LOAD, not on scroll — a dedicated CSS
+  // `animation` sequence (`.hero-stagger`/`.hero-photo` in global.css), not
+  // the IntersectionObserver-driven `[data-reveal]` system used elsewhere.
+  // Content must exist and be fully visible in the rendered HTML regardless
+  // of the animation (no JS-dependent hiding).
+  it("wraps the entrance content in a load-triggered stagger sequence and the photo in a zoom animation", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(Hero, {
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    expect(html).toMatch(/class="hero-stagger[^"]*"/);
+    expect(html).toMatch(/class="[^"]*\bhero-photo\b[^"]*"/);
+    // 3 direct entrance children (h1, párrafo, botones): 0/150/300ms delays,
+    // each a 600ms animation — total sequence 900ms, within the ≤900ms bound.
+    expect(html).toContain("--hero-delay:150ms");
+    expect(html).toContain("--hero-delay:300ms");
   });
 });

@@ -4,6 +4,12 @@
 // descriptive CTA link). Design: sibling to `ServiceCard.astro`, not an
 // extension of it — keeps Home's minimal card single-responsibility intact.
 // Real content lives with each page's data, not in this component.
+//
+// PR C ("Comprehensive Motion System v2"): the whole card gets the shared
+// `.service-card` hover lift/border/shadow (`global.css`,
+// `@media (hover: hover)`-guarded), and its CTA becomes an `.arrow-link`
+// whose underline grows and whose arrow shifts 3px on hover/focus (no
+// icon-bg here — this component has no icon prop).
 interface Props {
   title: string;
   description: string;
@@ -16,7 +22,7 @@ interface Props {
 const { title, description, scopeItems, ctaLabel, ctaHref } = Astro.props;
 ---
 
-<li class="flex flex-col gap-3 rounded-lg border border-border bg-paper p-6">
+<li class="service-card flex h-full flex-col gap-3 rounded-lg border border-border bg-paper p-6">
   <h3 class="font-heading text-lg font-semibold text-ink">{title}</h3>
   <p class="text-sm text-muted">{description}</p>
   <ul class="flex flex-col gap-1 text-sm text-muted">
@@ -24,8 +30,9 @@ const { title, description, scopeItems, ctaLabel, ctaHref } = Astro.props;
   </ul>
   <a
     href={ctaHref}
-    class="transition-interactive motion-reduce:transition-none mt-2 inline-flex w-fit items-center text-sm font-semibold text-brand-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
+    class="arrow-link transition-interactive motion-reduce:transition-none mt-2 inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-brand-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
   >
     {ctaLabel}
+    <span aria-hidden="true" class="arrow-link-arrow">→</span>
   </a>
 </li>
