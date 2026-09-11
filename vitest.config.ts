@@ -17,7 +17,10 @@ import react from "@vitejs/plugin-react";
 //   scoped to its own project so the Astro compiler plugin never touches the
 //   "unit" project's transform pipeline. PR2 extends its `include` glob to
 //   `src/components/common/**/*.test.ts` for `SiteHeader`/`SiteFooter`, per
-//   the plan documented in PR1's apply-progress.
+//   the plan documented in PR1's apply-progress. PR3 extends it again with
+//   `src/pages/*.test.ts` (single-level only — deliberately does NOT match
+//   `src/pages/api/**`, which stays on the "unit" project unaffected) for
+//   `contacto.astro`'s page-level regression test.
 export default defineConfig({
   test: {
     projects: [
@@ -34,7 +37,12 @@ export default defineConfig({
           globals: true,
           setupFiles: ["./vitest.setup.ts"],
           include: ["src/**/*.test.{ts,tsx}"],
-          exclude: ["tests/e2e/**", "src/layouts/**/*.test.ts", "src/components/common/**/*.test.ts"],
+          exclude: [
+            "tests/e2e/**",
+            "src/layouts/**/*.test.ts",
+            "src/components/common/**/*.test.ts",
+            "src/pages/*.test.ts",
+          ],
         },
       }),
       getViteConfig({
@@ -42,7 +50,7 @@ export default defineConfig({
           name: "astro",
           environment: "node",
           globals: true,
-          include: ["src/layouts/**/*.test.ts", "src/components/common/**/*.test.ts"],
+          include: ["src/layouts/**/*.test.ts", "src/components/common/**/*.test.ts", "src/pages/*.test.ts"],
         },
       }),
     ],

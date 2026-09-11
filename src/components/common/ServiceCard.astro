@@ -1,0 +1,32 @@
+---
+// Spec: "ServiceCard Component" — renders title/description from props with
+// a heading level appropriate to its section context, and must render
+// correctly with only the minimum required props (`title` + `description`,
+// no `icon`/`href`). Real service copy is a future page-content change.
+interface Props {
+  icon?: string;
+  title: string;
+  description: string;
+  href?: string;
+}
+
+const { icon, title, description, href } = Astro.props;
+
+const Wrapper = href ? "a" : "div";
+const wrapperClasses = [
+  "flex flex-col gap-3 rounded-lg border border-border bg-paper p-6",
+  href
+    ? "transition-interactive motion-reduce:transition-none hover:border-brand-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
+    : "",
+].join(" ");
+---
+
+<Wrapper href={href} class={wrapperClasses}>
+  {icon && (
+    <span aria-hidden="true" class="text-2xl">
+      {icon}
+    </span>
+  )}
+  <h3 class="font-heading text-lg font-semibold text-ink">{title}</h3>
+  <p class="text-sm text-muted">{description}</p>
+</Wrapper>

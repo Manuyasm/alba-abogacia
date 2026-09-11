@@ -1,0 +1,41 @@
+---
+// Spec: "FaqAccordion Component" — data-agnostic, accepts a list of
+// question/answer pairs and renders each as a native <details>/<summary>
+// item with the answer present in the initial HTML (no JS required to reveal
+// it). Real FAQ copy is a future page-content change; this component only
+// consumes whatever `items` it is given.
+interface Props {
+  items: { question: string; answer: string }[];
+}
+
+const { items } = Astro.props;
+---
+
+<div class="divide-y divide-border border-y border-border" data-reveal>
+  {
+    items.map((item) => (
+      <details class="group py-4">
+        <summary class="flex list-none cursor-pointer items-center justify-between gap-4 rounded-md p-1 font-medium text-ink transition-interactive motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red">
+          <span>{item.question}</span>
+          <span
+            aria-hidden="true"
+            class="faq-chevron transition-interactive motion-reduce:transition-none"
+          >
+            ›
+          </span>
+        </summary>
+        <p class="mt-2 text-sm text-muted">{item.answer}</p>
+      </details>
+    ))
+  }
+</div>
+
+<style>
+  /* Chevron rotation on open, bounded by the shared transition-interactive
+     utility applied above (spec: Accessibility Baseline -- visible,
+     motion-reduce-respecting affordance; design: motion-guardrail
+     conventions reused from SiteHeader's hamburger icon). */
+  details[open] .faq-chevron {
+    transform: rotate(90deg);
+  }
+</style>
