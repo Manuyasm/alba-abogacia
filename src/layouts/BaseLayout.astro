@@ -1,11 +1,49 @@
 ---
 import "@/styles/global.css";
+import { BRAND_NAME, OFFICES, PRIMARY_EMAIL } from "@/lib/site-facts";
 
 interface Props {
   title: string;
+  description?: string;
+  canonicalUrl?: string;
+  ogImage?: string;
 }
 
-const { title } = Astro.props;
+// Site-wide default meta description (spec: "Per-Page Meta Tags" — "Default
+// applies" scenario). Describes only the firm's real practice areas per
+// `sdd-init/alba-abogacia` (family law, labor law, inheritance, financial
+// consulting) — no unconfirmed marketing claims (e.g. "free consultation",
+// years of experience).
+const DEFAULT_DESCRIPTION =
+  "Despacho de abogacía y consultoría en Langreo (Asturias) y Madrid, especializado en derecho de familia, derecho laboral, herencias y asesoramiento a empresas.";
+
+const {
+  title,
+  description = DEFAULT_DESCRIPTION,
+  canonicalUrl = Astro.url.href,
+  ogImage,
+} = Astro.props;
+
+// Organization/LegalService JSON-LD (spec: "Organization/LegalService
+// JSON-LD"). Only confirmed fields from `site-facts.ts` are encoded — never
+// a legal-entity name (`legalName` is intentionally never set; the legal
+// entity name stays an unconfirmed page-local placeholder in
+// `politica-privacidad.astro`), never a `{{PLACEHOLDER}}` token, never
+// experience/credential claims. `telephone` uses only the Langreo office's
+// confirmed number; Madrid's phone/email are unconfirmed and simply never
+// referenced here (not filtered out — never fabricated in the first place).
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "LegalService",
+  name: BRAND_NAME,
+  email: PRIMARY_EMAIL,
+  telephone: OFFICES.langreo.phone,
+  address: [OFFICES.langreo, OFFICES.madrid].map((office) => ({
+    "@type": "PostalAddress",
+    streetAddress: office.addressLines.join(", "),
+    addressCountry: "ES",
+  })),
+};
 ---
 
 <!doctype html>
@@ -14,8 +52,21 @@ const { title } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(organizationJsonLd)} />
   </head>
   <body>
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-brand-red focus:px-4 focus:py-2 focus:text-paper transition-interactive motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
+    >
+      Saltar al contenido
+    </a>
     <slot />
     <script>
       import "@/lib/motion/scroll-reveal";
