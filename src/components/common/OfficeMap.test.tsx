@@ -1,0 +1,239 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render } from "@testing-library/react";
+import { OfficeMap, type OfficeMapMarker } from "./OfficeMap";
+
+/**
+ * Component tests for the `OfficeMap` island (spec: "office-map-widget" —
+ * "Map Rendering", "Tile Source Independence", "Accessible, Supplementary
+ * Presentation", "Reduced Motion Compliance", "Attribution Visibility";
+ * design: Decisions 1-4).
+ *
+ * This PR (PR1 of the office-map-widget chain) proves the component fully in
+ * isolation — it is not yet mounted on any `.astro` page. `maplibre-gl` is
+ * mocked throughout (same `vi.mock` convention `ContactForm.test.tsx` uses
+ * for `@cap.js/widget`): jsdom has no WebGL context, so the real library
+ * cannot construct a `Map` instance in tests.
+ */
+
+const OPENFREEMAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
+
+const TEST_OFFICES: OfficeMapMarker[] = [
+  { name: "Langreo (Asturias)", lat: 43.3078225, lon: -5.6961254 },
+  { name: "Madrid", lat: 40.465928, lon: -3.6906199 },
+];
+
+const mapInstances: Array<{
+  options: Record<string, unknown>;
+  on: ReturnType<typeof vi.fn>;
+  fitBounds: ReturnType<typeof vi.fn>;
+  flyTo: ReturnType<typeof vi.fn>;
+  easeTo: ReturnType<typeof vi.fn>;
+  remove: ReturnType<typeof vi.fn>;
+  addControl: ReturnType<typeof vi.fn>;
+  loadHandlers: Array<() => void>;
+}> = [];
+
+const markerInstances: Array<{
+  setLngLat: ReturnType<typeof vi.fn>;
+  setPopup: ReturnType<typeof vi.fn>;
+  addTo: ReturnType<typeof vi.fn>;
+  remove: ReturnType<typeof vi.fn>;
+  lngLat: [number, number] | undefined;
+}> = [];
+
+const popupInstances: Array<{
+  setText: ReturnType<typeof vi.fn>;
+  text: string | undefined;
+}> = [];
+
+let attributionControlConstructed = 0;
+
+vi.mock("maplibre-gl", () => {
+  class MockMap {
+    options: Record<string, unknown>;
+    loadHandlers: Array<() => void> = [];
+    fitBounds = vi.fn();
+    flyTo = vi.fn();
+    easeTo = vi.fn();
+    remove = vi.fn();
+    addControl = vi.fn();
+    on: ReturnType<typeof vi.fn>;
+
+    constructor(options: Record<string, unknown>) {
+      this.options = options;
+      this.on = vi.fn((event: string, handler: () => void) => {
+        if (event === "load") {
+          this.loadHandlers.push(handler);
+        }
+      });
+      mapInstances.push({
+        options: this.options,
+        on: this.on,
+        fitBounds: this.fitBounds,
+        flyTo: this.flyTo,
+        easeTo: this.easeTo,
+        remove: this.remove,
+        addControl: this.addControl,
+        loadHandlers: this.loadHandlers,
+      });
+    }
+  }
+
+  class MockMarker {
+    lngLat: [number, number] | undefined;
+    setLngLat = vi.fn((lngLat: [number, number]) => {
+      this.lngLat = lngLat;
+      return this;
+    });
+    setPopup = vi.fn(() => this);
+    addTo = vi.fn(() => this);
+    remove = vi.fn();
+
+    constructor() {
+      markerInstances.push({
+        setLngLat: this.setLngLat,
+        setPopup: this.setPopup,
+        addTo: this.addTo,
+        remove: this.remove,
+        lngLat: this.lngLat,
+      });
+    }
+  }
+
+  class MockPopup {
+    text: string | undefined;
+    setText = vi.fn((text: string) => {
+      this.text = text;
+      popupInstances.push({ setText: this.setText, text: this.text });
+      return this;
+    });
+  }
+
+  class MockAttributionControl {
+    constructor() {
+      attributionControlConstructed += 1;
+    }
+  }
+
+  return {
+    Map: MockMap,
+    Marker: MockMarker,
+    Popup: MockPopup,
+    AttributionControl: MockAttributionControl,
+  };
+});
+
+function triggerLoad(instanceIndex = mapInstances.length - 1) {
+  const instance = mapInstances[instanceIndex];
+  for (const handler of instance?.loadHandlers ?? []) {
+    handler();
+  }
+}
+
+beforeEach(() => {
+  mapInstances.length = 0;
+  markerInstances.length = 0;
+  popupInstances.length = 0;
+  attributionControlConstructed = 0;
+});
+
+afterEach(() => {
+  cleanup();
+});
+
+describe("OfficeMap map initialization", () => {
+  it("constructs exactly one Map with the OpenFreeMap Liberty style URL and no CARTO reference", () => {
+    render(<OfficeMap offices={TEST_OFFICES} />);
+
+    expect(mapInstances).toHaveLength(1);
+    const style = mapInstances[0]?.options.style;
+    expect(style).toBe(OPENFREEMAP_STYLE_URL);
+    expect(String(style)).not.toMatch(/carto/i);
+  });
+
+  it("never disables the default AttributionControl (attributionControl must not be false)", () => {
+    render(<OfficeMap offices={TEST_OFFICES} />);
+
+    expect(mapInstances[0]?.options.attributionControl).not.toBe(false);
+  });
+});
+
+describe("OfficeMap markers", () => {
+  it("adds exactly one Marker+Popup per office, positioned at its coordinates", () => {
+    render(<OfficeMap offices={TEST_OFFICES} />);
+
+    expect(markerInstances).toHaveLength(TEST_OFFICES.length);
+    for (const [index, office] of TEST_OFFICES.entries()) {
+      const marker = markerInstances[index];
+      expect(marker?.setLngLat).toHaveBeenCalledWith([office.lon, office.lat]);
+      expect(marker?.addTo).toHaveBeenCalled();
+    }
+    expect(popupInstances.map((p) => p.text)).toEqual(TEST_OFFICES.map((o) => o.name));
+  });
+
+  it("shows no other office locations beyond the offices prop", () => {
+    render(<OfficeMap offices={[TEST_OFFICES[0]!]} />);
+
+    expect(markerInstances).toHaveLength(1);
+  });
+});
+
+describe("OfficeMap camera behavior (design Decision 3: no animation, ever)", () => {
+  it("calls fitBounds with animate:false on load for all users", () => {
+    render(<OfficeMap offices={TEST_OFFICES} />);
+    triggerLoad();
+
+    expect(mapInstances[0]?.fitBounds).toHaveBeenCalledTimes(1);
+    const [, options] = mapInstances[0]!.fitBounds.mock.calls[0] as [unknown, { animate: boolean }];
+    expect(options.animate).toBe(false);
+  });
+
+  it("never calls flyTo or easeTo", () => {
+    render(<OfficeMap offices={TEST_OFFICES} />);
+    triggerLoad();
+
+    expect(mapInstances[0]?.flyTo).not.toHaveBeenCalled();
+    expect(mapInstances[0]?.easeTo).not.toHaveBeenCalled();
+  });
+
+  it("still fits bounds with animate:false when prefers-reduced-motion is set (no branching by motion preference)", () => {
+    const matchMediaMock = vi.fn().mockReturnValue({ matches: true });
+    vi.stubGlobal("matchMedia", matchMediaMock);
+
+    render(<OfficeMap offices={TEST_OFFICES} />);
+    triggerLoad();
+
+    expect(matchMediaMock).toHaveBeenCalledWith("(prefers-reduced-motion: reduce)");
+    const [, options] = mapInstances[0]!.fitBounds.mock.calls[0] as [unknown, { animate: boolean }];
+    expect(options.animate).toBe(false);
+
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("OfficeMap accessibility and layout", () => {
+  it("exposes role=img and an aria-label naming every office", () => {
+    const { container } = render(<OfficeMap offices={TEST_OFFICES} />);
+
+    const region = container.querySelector('[role="img"]');
+    expect(region).not.toBeNull();
+    expect(region).toHaveAttribute("aria-label", expect.stringContaining("Langreo"));
+    expect(region).toHaveAttribute("aria-label", expect.stringContaining("Madrid"));
+  });
+
+  it("reserves an explicit sized box to avoid CLS", () => {
+    const { container } = render(<OfficeMap offices={TEST_OFFICES} />);
+
+    const region = container.querySelector('[role="img"]');
+    expect(region?.className).toMatch(/aspect-|min-h-/);
+  });
+});
+
+describe("OfficeMap lifecycle", () => {
+  it("removes the map instance on unmount", () => {
+    const { unmount } = render(<OfficeMap offices={TEST_OFFICES} />);
+    unmount();
+
+    expect(mapInstances[0]?.remove).toHaveBeenCalledTimes(1);
+  });
+});
