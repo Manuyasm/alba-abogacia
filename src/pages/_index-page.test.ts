@@ -82,6 +82,34 @@ describe("index.astro (Home page composition)", () => {
     expect(madridCardSection).not.toContain("mailto:undefined");
   });
 
+  // office-map-widget PR2 (task 3.2): the shared map is mounted once, below
+  // both OfficeCards, inside the same "Nuestras oficinas" section — not
+  // duplicated per card (design's page-mounting decision).
+  it("mounts the shared OfficeMap below both OfficeCards, naming both offices in its accessible label", async () => {
+    const html = await renderHome();
+
+    const officesStart = html.indexOf("Nuestras oficinas");
+    const faqStart = html.indexOf("Preguntas frecuentes");
+    const officesSection = html.slice(officesStart, faqStart);
+
+    expect(officesSection).toMatch(/role="img"/);
+    expect(officesSection).toContain(
+      `aria-label="Mapa con la ubicación de: ${OFFICES.langreo.name}, ${OFFICES.madrid.name}"`,
+    );
+
+    // The map must come after both OfficeCards, not interleaved between them.
+    const secondOfficeCardIndex = officesSection.lastIndexOf(MADRID_ADDRESS_LINE);
+    const mapIndex = officesSection.indexOf('role="img"');
+    expect(mapIndex).toBeGreaterThan(secondOfficeCardIndex);
+  });
+
+  it('still renders both unchanged "Cómo llegar" links alongside the map', async () => {
+    const html = await renderHome();
+
+    expect(html).toContain(`aria-label="Cómo llegar a ${OFFICES.langreo.name}"`);
+    expect(html).toContain(`aria-label="Cómo llegar a ${OFFICES.madrid.name}"`);
+  });
+
   it("renders a FaqAccordion with 4 details/summary items", async () => {
     const html = await renderHome();
 

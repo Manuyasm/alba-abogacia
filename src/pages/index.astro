@@ -7,6 +7,7 @@ import TeamTeaser from "@/components/home/TeamTeaser.astro";
 import ProcessSteps from "@/components/common/ProcessSteps.astro";
 import OfficeCard from "@/components/common/OfficeCard.astro";
 import FaqAccordion from "@/components/common/FaqAccordion.astro";
+import { OfficeMap } from "@/components/common/OfficeMap";
 import { OFFICES, SITE_NAME } from "@/lib/site-facts";
 
 // Spec: full Home page composition ("Hero Section" through "Contact
@@ -24,6 +25,16 @@ const HOME_DESCRIPTION =
 // service scope. Excludes pricing, response-time promises, a no-cost-visit
 // claim (AGENTS.md §18), any bar-association credential number, and any
 // WhatsApp reference.
+
+// office-map-widget PR2 (task 3.2): one shared map for both offices, mounted
+// below both `OfficeCard`s (design's page-mounting decision — not one map
+// per card). Projected to `OfficeMapMarker`'s exact shape.
+const OFFICE_MAP_MARKERS = [OFFICES.langreo, OFFICES.madrid].map(({ name, lat, lon }) => ({
+  name,
+  lat,
+  lon,
+}));
+
 const FAQ_ITEMS = [
   {
     question: "¿En qué zonas atienden?",
@@ -61,6 +72,9 @@ const FAQ_ITEMS = [
         <li data-reveal="stagger" style="--reveal-delay:0ms"><OfficeCard {...OFFICES.langreo} /></li>
         <li data-reveal="stagger" style="--reveal-delay:70ms"><OfficeCard {...OFFICES.madrid} /></li>
       </ul>
+      <div class="mt-8">
+        <OfficeMap client:visible offices={OFFICE_MAP_MARKERS} />
+      </div>
     </section>
 
     <section class="mx-auto max-w-3xl px-4 py-16">
