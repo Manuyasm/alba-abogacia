@@ -1,5 +1,10 @@
 ---
+import { Image } from "astro:assets";
 import { SITE_NAME } from "@/lib/site-facts";
+// Real client logo, verified vertical lockup (symbol above wordmark,
+// transparent background) — see AGENTS.md §14 / DESIGN.md §3.2, §7.3 for the
+// `astro:assets` mandate (auto width/height avoids CLS, auto AVIF/WebP).
+import logo from "@/assets/brand/logo.png";
 
 // Structural route list, duplicated (not extracted into a shared module)
 // in `SiteFooter.astro`: only 2 consumers, 4 static entries, low drift risk
@@ -31,9 +36,9 @@ const linkClasses = (href: string) =>
   <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
     <a
       href="/"
-      class="rounded-md font-heading text-lg font-semibold text-ink transition-interactive motion-reduce:transition-none hover:text-brand-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
+      class="flex items-center rounded-md transition-interactive motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
     >
-      {SITE_NAME}
+      <Image src={logo} alt={SITE_NAME} class="h-10 w-auto" widths={[80, 160]} />
     </a>
 
     <nav aria-label="Principal" class="hidden md:flex md:items-center md:gap-6">

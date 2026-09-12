@@ -69,4 +69,17 @@ describe("SiteHeader", () => {
     expect(html).toMatch(/<details[^>]*>[\s\S]*<summary[^>]*aria-label="Abrir menú"[^>]*>/);
     expect(html).toContain('aria-label="Principal (móvil)"');
   });
+
+  // Design decision #3 (animations-v2): real client logo via `astro:assets`
+  // `<Image>`, never hotlinked to the Stitch mockup's Google CDN.
+  it("renders the real logo via astro:assets, never hotlinked to an external host", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(SiteHeader, {
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    expect(html).toMatch(/<img[^>]*alt="ALBA Abogacía &amp; Consulting"/);
+    expect(html).not.toContain("googleusercontent");
+    expect(html).not.toContain("aida-public");
+  });
 });
