@@ -337,6 +337,12 @@ Ambas bandas se verifican automáticamente mediante el escáner de guardarraíl 
 - Sin parallax intenso, carruseles automáticos ni entradas que oculten inicialmente contenido importante: todo el contenido de una sección con `data-reveal` es visible por defecto sin JavaScript; el guion solo añade la animación de entrada cuando el navegador la soporta y la persona usuaria no ha solicitado movimiento reducido.
 - Desactivar movimiento no esencial con `prefers-reduced-motion`: la regla global colapsa ambas bandas a una duración casi nula, independientemente de la banda a la que pertenezca cada transición.
 
+### 13.1 Adopción acotada de ClientRouter
+
+El sitio sigue siendo multipágina estática (`output: "static"`), no una SPA: `<ClientRouter />` (Astro View Transitions) solo sustituye la navegación de documento completo por un fundido de ~220 ms entre página y página, dentro de la misma banda interactiva (150–250 ms) descrita arriba. El logotipo del encabezado (`SiteHeader.astro`) usa `transition:persist` para no parpadear durante ese fundido; el resto del encabezado (navegación, CTA "Solicitar consulta") se re-renderiza en cada navegación para que el estado activo del enlace y el seguimiento de clics de Umami sigan siendo correctos por página.
+
+Los módulos `scroll-reveal.ts`, `header-scroll.ts`, `faq-animate.ts` y `click-tracking.ts` exponen cada uno una función `init*(root?)` que devuelve un `disconnect()`. `BaseLayout.astro` es el único punto que los invoca: escucha `astro:page-load` (que Astro dispara tanto en la carga inicial como en cada navegación posterior) y, en cada disparo, desconecta las instancias anteriores antes de reinicializar las cuatro. Ninguno de los módulos se auto-inicializa ya al importarse — un segundo punto de inicialización independiente duplicaría los listeners en la primerísima carga, lo que en `click-tracking.ts` dispararía `trackEvent()` dos veces por clic.
+
 ## 14. Objetivos de calidad
 
 - Lighthouse orientativo: 95+ en rendimiento, accesibilidad, buenas prácticas y SEO en páginas principales.

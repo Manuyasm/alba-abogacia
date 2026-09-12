@@ -134,14 +134,7 @@ export function initFaqAnimation(root: ParentNode = document): () => void {
   };
 }
 
-// Auto-init once, site-wide, on module import (same convention as
-// `scroll-reveal.ts`/`header-scroll.ts`). The returned `disconnect()` is
-// intentionally unused here — re-init after client-side navigation is wired
-// up in `BaseLayout.astro` in a later PR (design decision #9).
-if (typeof document !== "undefined") {
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => initFaqAnimation());
-  } else {
-    initFaqAnimation();
-  }
-}
+// PR F (design decision #9, "ClientRouter re-init"): this module no longer
+// self-invokes on import — see `scroll-reveal.ts`'s matching comment.
+// `src/layouts/BaseLayout.astro` is now the sole owner of the init
+// lifecycle via `astro:page-load`.

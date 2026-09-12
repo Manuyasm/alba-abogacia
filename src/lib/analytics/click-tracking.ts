@@ -65,15 +65,10 @@ export function initClickTracking(root: ParentNode = document): () => void {
   };
 }
 
-// Auto-init once, site-wide, on module import (same convention as
-// `scroll-reveal.ts`/`header-scroll.ts`/`faq-animate.ts`). The returned
-// `disconnect()` is intentionally unused here — re-init after client-side
-// navigation is wired up in `BaseLayout.astro` in a later PR (design
-// decision #9).
-if (typeof document !== "undefined") {
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => initClickTracking());
-  } else {
-    initClickTracking();
-  }
-}
+// PR F (design decision #9, "ClientRouter re-init"): this module no longer
+// self-invokes on import — see `scroll-reveal.ts`'s matching comment.
+// `src/layouts/BaseLayout.astro` is now the sole owner of the init
+// lifecycle via `astro:page-load`. This also removes the one real risk of
+// duplicate-firing this module previously carried: a second independent
+// auto-init source binding a second `click` listener onto the same
+// `[data-track]` node would have fired `trackEvent()` twice per click.

@@ -70,15 +70,10 @@ export function initScrollReveal(root: ParentNode = document): () => void {
   };
 }
 
-// Auto-init once, site-wide, on module import (design: "auto-inits on import
-// via DOMContentLoaded/immediate check"). Guarded for non-browser/test
-// environments where `document` may be absent. The returned `disconnect()`
-// is intentionally unused here — re-init after client-side navigation is
-// wired up in `BaseLayout.astro` in a later PR (design decision #9).
-if (typeof document !== "undefined") {
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => initScrollReveal());
-  } else {
-    initScrollReveal();
-  }
-}
+// PR F (design decision #9, "ClientRouter re-init"): this module no longer
+// self-invokes on import. `src/layouts/BaseLayout.astro` is now the SOLE
+// owner of the init lifecycle, calling `initScrollReveal()` on every
+// `astro:page-load` (which fires on both the very first page load and every
+// subsequent client-side navigation) and disconnecting the previous
+// instance first. A second, independent auto-init source here would
+// double-bind on the very first load already.

@@ -41,9 +41,23 @@ const primaryCtaClasses =
 
 <header class="site-header border-b border-border bg-paper" data-header>
   <div class="site-header-bar mx-auto flex max-w-6xl items-center justify-between gap-4 px-4">
+    <!-- Narrow ClientRouter adoption (spec: "Header stays stable during
+         transition"; PR F). `transition:persist` is scoped to only this
+         logo link, deliberately NOT the whole `<header>`: persisting the
+         entire header would keep the OLD page's server-rendered nav
+         `aria-current`/active-link state and the OLD "Solicitar consulta"
+         CTA node alive across navigation, which would (a) leave the active
+         nav link visibly stale after navigating, and (b) risk two click
+         listeners ending up bound to the exact same never-replaced CTA
+         node, firing `appointment_click` twice per click. Persisting only
+         the logo removes any visible flash/reset of the one element the
+         requirement is actually about, while nav/CTA still re-render fresh
+         (and re-observe fresh) on every navigation. -->
     <a
       href="/"
       class="flex items-center rounded-md transition-interactive motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
+      transition:name="site-logo"
+      transition:persist
     >
       <Image src={logo} alt={SITE_NAME} class="h-10 w-auto" widths={[80, 160]} />
     </a>
