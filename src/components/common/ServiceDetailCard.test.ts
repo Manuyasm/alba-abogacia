@@ -47,11 +47,33 @@ describe("ServiceDetailCard", () => {
 
     const anchorMatches = html.match(/<a[^>]*>/g) ?? [];
     expect(anchorMatches).toHaveLength(1);
-    expect(html).toMatch(/<a[^>]*href="\/contacto"[^>]*>\s*Consultar sobre otro servicio\s*<\/a>/);
+    // PR C ("Comprehensive Motion System v2"): the CTA is now an
+    // `.arrow-link` with a trailing arrow indicator element, so it no
+    // longer closes immediately after the label text.
+    expect(html).toMatch(/<a[^>]*href="\/contacto"[^>]*>[\s\S]*Consultar sobre otro servicio[\s\S]*<\/a>/);
+    expect(html).toContain("arrow-link-arrow");
 
     const liMatches = html.match(/<li[\s>]/g) ?? [];
     // 1 outer card <li> + 1 scope-item <li> (different count than the first test).
     expect(liMatches).toHaveLength(2);
+  });
+
+  // PR C: the whole card lifts/gains a red border/shadow on hover
+  // (hover-capable devices only), matching `ServiceCard.astro`'s pattern.
+  it("carries the .service-card hover class on the outer card", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(ServiceDetailCard, {
+      props: {
+        title: "Servicio de ejemplo",
+        description: "Descripción de ejemplo para el servicio ficticio.",
+        scopeItems: ["Situación típica uno"],
+        ctaLabel: "Consultar sobre el servicio",
+        ctaHref: "/contacto",
+      },
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    expect(html).toMatch(/<li class="[^"]*\bservice-card\b[^"]*"/);
   });
 
   it("contains no pricing, fee, or SLA/time-bound claims", async () => {

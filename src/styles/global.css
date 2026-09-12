@@ -160,4 +160,166 @@ h6 {
   transition-timing-function: ease-out;
   transition-duration: 600ms;
 }
+
+/*
+ * Hero entrance sequence (PR C, "Comprehensive Motion System v2"). Unlike
+ * the scroll-triggered `[data-reveal]` system above, the hero fires on page
+ * LOAD (it is always above the fold), so it is a plain CSS `animation`
+ * rather than a JS/IntersectionObserver-toggled class pair. Kept inside
+ * this same MOTION-GUARDRAIL block because its animation duration belongs
+ * to the same "deliberate entrance" band as scroll-reveal, not the shorter
+ * interactive hover/focus band below. Per-child delay is supplied by an
+ * inline `--hero-delay` custom property in `Hero.astro` (same indirection
+ * technique as `[data-reveal="stagger"]` above) so no delay-duration
+ * literal ever needs to live in this file outside the reveal-band bound
+ * this block is scanned against. Values are documented in `Hero.astro`'s
+ * own comment, not repeated here as digit-plus-unit text, so this doc
+ * comment does not trip the interactive-band scanner the way a stray
+ * "quantity-unit" sequence would.
+ */
+@keyframes hero-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hero-photo-zoom {
+  from {
+    transform: scale(1.025);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.hero-stagger > * {
+  animation: hero-fade-up 600ms ease-out both;
+  animation-delay: var(--hero-delay, 0s);
+}
+
+.hero-photo {
+  animation: hero-photo-zoom 600ms ease-out both;
+}
 /* MOTION-GUARDRAIL: reveal-band-end */
+
+/*
+ * Service-card hover micro-interaction (PR C). Shared by `ServiceCard.astro`
+ * and `ServiceDetailCard.astro` — both apply the `.service-card` class to
+ * their outer element. `@media (hover: hover)` guards every `:hover` rule so
+ * a touch tap never leaves the card stuck in its hovered state (spec:
+ * "no stuck hover on touch"); keyboard users already get the existing
+ * `focus-visible:ring-2` Tailwind utility carried on the element itself, so
+ * no separate focus handling is needed here. 200ms sits inside the
+ * interactive 150-250ms bound enforced below.
+ */
+.service-card {
+  transition-property: transform, box-shadow, border-color;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+
+.service-card-arrow,
+.service-card-icon-bg {
+  transition-property: transform, background-color;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+
+@media (hover: hover) {
+  .service-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px -12px rgb(0 0 0 / 0.15);
+    border-color: var(--color-brand-red);
+  }
+
+  .service-card:hover .service-card-arrow {
+    transform: translateX(3px);
+  }
+
+  .service-card:hover .service-card-icon-bg {
+    background-color: var(--color-cream-deep);
+  }
+}
+
+/*
+ * Primary button micro-interaction (PR C). Base colors/focus-visible ring
+ * stay on the existing Tailwind utility classes at each usage site (already
+ * paired with `motion-reduce:transition-none`) — this class only adds the
+ * hover lift / no-active-lift behavior. Hover is guarded by
+ * `@media (hover: hover)` for the same touch-safety reason as `.service-card`
+ * above; `:active` has no guard since it naturally clears on release and
+ * never gets "stuck".
+ */
+.btn-primary {
+  transition-property: transform;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+
+@media (hover: hover) {
+  .btn-primary:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/*
+ * Arrow-link pattern (PR C) — a descriptive text CTA (e.g.
+ * `ServiceDetailCard`'s per-card CTA) whose underline grows in and whose
+ * arrow shifts on hover/focus. Uses `.arrow-link-arrow`'s `transform` and an
+ * `::after` pseudo-element `transform: scaleX()` instead of `width`/margin,
+ * so neither effect ever shifts surrounding layout. `:focus-visible` rules
+ * are intentionally OUTSIDE the `@media (hover: hover)` guard — keyboard
+ * focus must always be visible regardless of hover capability.
+ */
+.arrow-link {
+  position: relative;
+}
+
+.arrow-link::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition-property: transform;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+
+.arrow-link-arrow {
+  display: inline-block;
+  transition-property: transform;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+
+.arrow-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.arrow-link:focus-visible .arrow-link-arrow {
+  transform: translateX(3px);
+}
+
+@media (hover: hover) {
+  .arrow-link:hover::after {
+    transform: scaleX(1);
+  }
+
+  .arrow-link:hover .arrow-link-arrow {
+    transform: translateX(3px);
+  }
+}

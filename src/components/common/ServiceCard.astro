@@ -3,6 +3,13 @@
 // a heading level appropriate to its section context, and must render
 // correctly with only the minimum required props (`title` + `description`,
 // no `icon`/`href`). Real service copy is a future page-content change.
+//
+// PR C ("Comprehensive Motion System v2"): clickable cards (href supplied)
+// get the shared `.service-card` hover micro-interaction (≤4px lift, red
+// border, light shadow — see `global.css`, guarded by
+// `@media (hover: hover)` so touch taps never get stuck hovered) plus an
+// arrow indicator that shifts 3px on hover. A non-interactive card (no
+// href) has nothing to hover into, so neither is added.
 interface Props {
   icon?: string;
   title: string;
@@ -14,19 +21,27 @@ const { icon, title, description, href } = Astro.props;
 
 const Wrapper = href ? "a" : "div";
 const wrapperClasses = [
-  "flex flex-col gap-3 rounded-lg border border-border bg-paper p-6",
+  "flex h-full flex-col gap-3 rounded-lg border border-border bg-paper p-6",
   href
-    ? "transition-interactive motion-reduce:transition-none hover:border-brand-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
+    ? "service-card transition-interactive motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
     : "",
 ].join(" ");
 ---
 
 <Wrapper href={href} class={wrapperClasses}>
   {icon && (
-    <span aria-hidden="true" class="text-2xl">
+    <span
+      aria-hidden="true"
+      class="service-card-icon-bg inline-flex h-10 w-10 items-center justify-center rounded-full bg-cream text-2xl"
+    >
       {icon}
     </span>
   )}
   <h3 class="font-heading text-lg font-semibold text-ink">{title}</h3>
   <p class="text-sm text-muted">{description}</p>
+  {href && (
+    <span aria-hidden="true" class="service-card-arrow mt-auto inline-flex items-center text-brand-red">
+      →
+    </span>
+  )}
 </Wrapper>

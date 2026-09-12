@@ -57,8 +57,10 @@ describe("servicios.astro (page composition)", () => {
     const juridicoSection = html.slice(juridicoStart, financieroStart);
     const financieroSection = html.slice(financieroStart, processStart);
 
-    expect(juridicoSection.match(/<li[^>]*class="flex flex-col gap-3/g)).toHaveLength(4);
-    expect(financieroSection.match(/<li[^>]*class="flex flex-col gap-3/g)).toHaveLength(2);
+    // PR C ("Comprehensive Motion System v2") added the `.service-card`
+    // hover class to `ServiceDetailCard.astro`'s outer `<li>`.
+    expect(juridicoSection.match(/<li[^>]*class="service-card flex/g)).toHaveLength(4);
+    expect(financieroSection.match(/<li[^>]*class="service-card flex/g)).toHaveLength(2);
 
     expect(juridicoSection).toContain("Derecho de familia");
     expect(juridicoSection).toContain("Herencias y sucesiones");
