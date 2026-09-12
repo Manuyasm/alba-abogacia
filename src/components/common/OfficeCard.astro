@@ -2,23 +2,32 @@
 // Spec: "OfficeCard Component" — renders address, phone, and email from
 // props, supporting either office (Langreo or Madrid) without hardcoding
 // either one's data. Props intentionally mirror `site-facts.ts`'s
-// `OfficeFact` shape (`addressLines`/`phone`/`phoneHref`/`email`) so a future
-// consumer can pass `OFFICES.langreo`/`OFFICES.madrid` directly — Madrid has
-// no confirmed phone or email, so both remain optional and are simply
-// omitted from the rendered markup when absent (never a fabricated value).
+// `OfficeFact` shape (`addressLines`/`phone`/`phoneHref`/`email`/`lat`/`lon`)
+// so a consumer can pass `OFFICES.langreo`/`OFFICES.madrid` directly —
+// Madrid has no confirmed phone or email, so both remain optional and are
+// simply omitted from the rendered markup when absent (never a fabricated
+// value).
 // office-map: also renders a "Cómo llegar" outbound link to Google Maps,
 // built at build time from `name`/`addressLines` — no request is made until
 // the visitor activates the link.
+// office-map-per-office redesign: also mounts its own small `OfficeMap`
+// instance below the address/contact/directions content, centered on this
+// card's own `lat`/`lon` — replacing the previous single shared map mounted
+// once per page below every card.
+import { OfficeMap } from "./OfficeMap";
+
 interface Props {
   name: string;
   addressLines: string[];
   phone?: string;
   phoneHref?: string;
   email?: string;
+  lat: number;
+  lon: number;
   mapNote?: string;
 }
 
-const { name, addressLines, phone, phoneHref, email, mapNote } = Astro.props;
+const { name, addressLines, phone, phoneHref, email, lat, lon, mapNote } = Astro.props;
 
 const linkClasses =
   "font-medium text-brand-red underline underline-offset-2 transition-interactive motion-reduce:transition-none hover:text-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red";
@@ -62,4 +71,7 @@ const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURICom
     </p>
   </address>
   {mapNote && <p class="mt-3 text-xs text-muted">{mapNote}</p>}
+  <div class="mt-4">
+    <OfficeMap client:visible name={name} lat={lat} lon={lon} />
+  </div>
 </div>

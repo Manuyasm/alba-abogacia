@@ -82,25 +82,20 @@ describe("index.astro (Home page composition)", () => {
     expect(madridCardSection).not.toContain("mailto:undefined");
   });
 
-  // office-map-widget PR2 (task 3.2): the shared map is mounted once, below
-  // both OfficeCards, inside the same "Nuestras oficinas" section — not
-  // duplicated per card (design's page-mounting decision).
-  it("mounts the shared OfficeMap below both OfficeCards, naming both offices in its accessible label", async () => {
+  // office-map-per-office redesign: each OfficeCard now carries its own
+  // small map, centered on that office only — there is no longer a single
+  // shared map mounted below both cards.
+  it("gives each OfficeCard its own OfficeMap, naming only its own office", async () => {
     const html = await renderHome();
 
     const officesStart = html.indexOf("Nuestras oficinas");
     const faqStart = html.indexOf("Preguntas frecuentes");
     const officesSection = html.slice(officesStart, faqStart);
 
-    expect(officesSection).toMatch(/role="region"/);
-    expect(officesSection).toContain(
-      `aria-label="Mapa con la ubicación de: ${OFFICES.langreo.name}, ${OFFICES.madrid.name}"`,
-    );
-
-    // The map must come after both OfficeCards, not interleaved between them.
-    const secondOfficeCardIndex = officesSection.lastIndexOf(MADRID_ADDRESS_LINE);
-    const mapIndex = officesSection.indexOf('role="region"');
-    expect(mapIndex).toBeGreaterThan(secondOfficeCardIndex);
+    expect(officesSection.match(/role="region"/g)).toHaveLength(2);
+    expect(officesSection).toContain(`aria-label="Mapa de ubicación de ${OFFICES.langreo.name}"`);
+    expect(officesSection).toContain(`aria-label="Mapa de ubicación de ${OFFICES.madrid.name}"`);
+    expect(officesSection).not.toContain("Mapa con la ubicación de:");
   });
 
   it('still renders both unchanged "Cómo llegar" links alongside the map', async () => {

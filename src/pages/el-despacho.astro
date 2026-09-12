@@ -3,7 +3,6 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 import TeamCard from "@/components/common/TeamCard.astro";
 import OfficeCard from "@/components/common/OfficeCard.astro";
 import FaqAccordion from "@/components/common/FaqAccordion.astro";
-import { OfficeMap } from "@/components/common/OfficeMap";
 import { OFFICES, SITE_NAME } from "@/lib/site-facts";
 
 // Spec: "Page Existence", "Philosophy/Intro Section", "Team Profiles",
@@ -39,15 +38,6 @@ const TEAM = [
 // `mapNote` text on both cards by construction — no "sede principal"/"sede
 // corporativa" hierarchy framing between Langreo and Madrid.
 const OFFICE_MAP_NOTE = "Atención presencial y telemática.";
-
-// office-map-widget PR2 (task 3.3): one shared map for both offices, mounted
-// below both `OfficeCard`s (design's page-mounting decision — not one map
-// per card). Projected to `OfficeMapMarker`'s exact shape.
-const OFFICE_MAP_MARKERS = [OFFICES.langreo, OFFICES.madrid].map(({ name, lat, lon }) => ({
-  name,
-  lat,
-  lon,
-}));
 
 // FAQ (§4): fresh, el-despacho-specific structural facts only (how the two
 // professionals coordinate, remote/telemático availability, and a pointer to
@@ -144,9 +134,6 @@ const primaryCtaClasses =
           <OfficeCard {...OFFICES.madrid} mapNote={OFFICE_MAP_NOTE} />
         </li>
       </ul>
-      <div class="mt-8">
-        <OfficeMap client:visible offices={OFFICE_MAP_MARKERS} />
-      </div>
     </section>
 
     <section class="mx-auto max-w-3xl px-4 py-16">

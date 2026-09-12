@@ -1,26 +1,44 @@
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
+import { getContainerRenderer } from "@astrojs/react/container-renderer";
+// Astro virtual module — only resolvable under Vite/Vitest (documented
+// Container API pattern for a component that mounts a framework island).
+// Needed starting with the office-map-per-office redesign, since
+// `OfficeCard` now mounts its own `<OfficeMap client:visible />` React
+// island (matches `_index-page.test.ts`'s established pattern).
+import { loadRenderers } from "astro:container";
 import { describe, expect, it } from "vitest";
 import { OFFICES } from "../../lib/site-facts";
 import OfficeCard from "./OfficeCard.astro";
 
 // Spec: "OfficeCard Component" — renders address, phone, and email from
-// props, supporting either office shape (with or without a confirmed phone)
-// without hardcoding either one's data. Fixture data below is clearly
-// fictional placeholder office data, deliberately distinct from the real
-// confirmed Langreo/Madrid facts in `site-facts.ts` (no real client data in
-// this component's own unit tests — it must stay data-agnostic).
+// props, supporting either office (Langreo or Madrid) without hardcoding
+// either one's data. Fixture data below is clearly fictional placeholder
+// office data, deliberately distinct from the real confirmed Langreo/Madrid
+// facts in `site-facts.ts` (no real client data in this component's own unit
+// tests — it must stay data-agnostic).
+//
+// office-map-per-office redesign: `OfficeCard` now also mounts its own
+// `OfficeMap` instance, so every render needs the React container renderer
+// registered, and fixture props now also carry `lat`/`lon`.
+async function renderCard(props: Record<string, unknown>): Promise<string> {
+  const renderers = await loadRenderers([getContainerRenderer()]);
+  const container = await AstroContainer.create({ renderers });
+  return container.renderToString(OfficeCard, {
+    props,
+    request: new Request("https://alba-abogacia.es/"),
+  });
+}
+
 describe("OfficeCard", () => {
   it("renders address, phone, and email when all are supplied", async () => {
-    const container = await AstroContainer.create();
-    const html = await container.renderToString(OfficeCard, {
-      props: {
-        name: "Oficina de ejemplo",
-        addressLines: ["Calle Ficticia, nº 1, Ciudad Ejemplo"],
-        phone: "600000000",
-        phoneHref: "tel:600000000",
-        email: "ejemplo@ejemplo-ficticio.test",
-      },
-      request: new Request("https://alba-abogacia.es/"),
+    const html = await renderCard({
+      name: "Oficina de ejemplo",
+      addressLines: ["Calle Ficticia, nº 1, Ciudad Ejemplo"],
+      phone: "600000000",
+      phoneHref: "tel:600000000",
+      email: "ejemplo@ejemplo-ficticio.test",
+      lat: 40.0,
+      lon: -3.0,
     });
 
     expect(html).toContain("Oficina de ejemplo");
@@ -33,16 +51,14 @@ describe("OfficeCard", () => {
   // animations-v2 PR E, design decision #8: click-tracking wiring — phone
   // and email links carry the `[data-track]` hook `click-tracking.ts` reads.
   it("marks the phone and email links with the click-tracking data-track hooks", async () => {
-    const container = await AstroContainer.create();
-    const html = await container.renderToString(OfficeCard, {
-      props: {
-        name: "Oficina de ejemplo",
-        addressLines: ["Calle Ficticia, nº 1, Ciudad Ejemplo"],
-        phone: "600000000",
-        phoneHref: "tel:600000000",
-        email: "ejemplo@ejemplo-ficticio.test",
-      },
-      request: new Request("https://alba-abogacia.es/"),
+    const html = await renderCard({
+      name: "Oficina de ejemplo",
+      addressLines: ["Calle Ficticia, nº 1, Ciudad Ejemplo"],
+      phone: "600000000",
+      phoneHref: "tel:600000000",
+      email: "ejemplo@ejemplo-ficticio.test",
+      lat: 40.0,
+      lon: -3.0,
     });
 
     expect(html).toMatch(/href="tel:600000000"[^>]*data-track="phone_click"/);
@@ -50,13 +66,11 @@ describe("OfficeCard", () => {
   });
 
   it("renders correctly with no phone or email supplied, with no broken markup", async () => {
-    const container = await AstroContainer.create();
-    const html = await container.renderToString(OfficeCard, {
-      props: {
-        name: "Oficina secundaria de ejemplo",
-        addressLines: ["Avenida Ficticia, nº 2, Otra Ciudad Ejemplo"],
-      },
-      request: new Request("https://alba-abogacia.es/"),
+    const html = await renderCard({
+      name: "Oficina secundaria de ejemplo",
+      addressLines: ["Avenida Ficticia, nº 2, Otra Ciudad Ejemplo"],
+      lat: 40.0,
+      lon: -3.0,
     });
 
     expect(html).toContain("Oficina secundaria de ejemplo");
@@ -72,11 +86,7 @@ describe("OfficeCard", () => {
   // production addresses end-to-end, matching the `site-facts.ts` real-data
   // test pattern already used elsewhere for facts consumers.
   it("renders a correctly encoded Google Maps href for Langreo", async () => {
-    const container = await AstroContainer.create();
-    const html = await container.renderToString(OfficeCard, {
-      props: { ...OFFICES.langreo },
-      request: new Request("https://alba-abogacia.es/"),
-    });
+    const html = await renderCard({ ...OFFICES.langreo });
 
     const expectedHref =
       "https://www.google.com/maps/search/?api=1&query=" +
@@ -88,11 +98,7 @@ describe("OfficeCard", () => {
   });
 
   it("renders a correctly encoded Google Maps href for Madrid", async () => {
-    const container = await AstroContainer.create();
-    const html = await container.renderToString(OfficeCard, {
-      props: { ...OFFICES.madrid },
-      request: new Request("https://alba-abogacia.es/"),
-    });
+    const html = await renderCard({ ...OFFICES.madrid });
 
     const expectedHref =
       "https://www.google.com/maps/search/?api=1&query=" +
@@ -109,16 +115,8 @@ describe("OfficeCard", () => {
   });
 
   it("marks the maps link with target=_blank and rel=noopener noreferrer on both office fixtures", async () => {
-    const container = await AstroContainer.create();
-
-    const langreoHtml = await container.renderToString(OfficeCard, {
-      props: { ...OFFICES.langreo },
-      request: new Request("https://alba-abogacia.es/"),
-    });
-    const madridHtml = await container.renderToString(OfficeCard, {
-      props: { ...OFFICES.madrid },
-      request: new Request("https://alba-abogacia.es/"),
-    });
+    const langreoHtml = await renderCard({ ...OFFICES.langreo });
+    const madridHtml = await renderCard({ ...OFFICES.madrid });
 
     for (const html of [langreoHtml, madridHtml]) {
       expect(html).toMatch(/maps\/search\/\?api=1&(?:amp;)?query=[^"]*"[^>]*target="_blank"/);
@@ -127,16 +125,8 @@ describe("OfficeCard", () => {
   });
 
   it("gives the maps link a distinct aria-label per office", async () => {
-    const container = await AstroContainer.create();
-
-    const langreoHtml = await container.renderToString(OfficeCard, {
-      props: { ...OFFICES.langreo },
-      request: new Request("https://alba-abogacia.es/"),
-    });
-    const madridHtml = await container.renderToString(OfficeCard, {
-      props: { ...OFFICES.madrid },
-      request: new Request("https://alba-abogacia.es/"),
-    });
+    const langreoHtml = await renderCard({ ...OFFICES.langreo });
+    const madridHtml = await renderCard({ ...OFFICES.madrid });
 
     expect(langreoHtml).toContain('aria-label="Cómo llegar a Langreo (Asturias)"');
     expect(madridHtml).toContain('aria-label="Cómo llegar a Madrid"');
@@ -145,13 +135,11 @@ describe("OfficeCard", () => {
   });
 
   it("renders the maps link even with no phone or email supplied, with no broken markup", async () => {
-    const container = await AstroContainer.create();
-    const html = await container.renderToString(OfficeCard, {
-      props: {
-        name: "Oficina secundaria de ejemplo",
-        addressLines: ["Avenida Ficticia, nº 2, Otra Ciudad Ejemplo"],
-      },
-      request: new Request("https://alba-abogacia.es/"),
+    const html = await renderCard({
+      name: "Oficina secundaria de ejemplo",
+      addressLines: ["Avenida Ficticia, nº 2, Otra Ciudad Ejemplo"],
+      lat: 40.0,
+      lon: -3.0,
     });
 
     const expectedHref =
@@ -162,5 +150,30 @@ describe("OfficeCard", () => {
     // is escaped to `&amp;` in the rendered markup.
     expect(html).toContain(`href="${expectedHref.replace("&", "&amp;")}"`);
     expect(html).not.toContain("undefined");
+  });
+
+  // office-map-per-office redesign: each card now mounts its own small
+  // `OfficeMap`, centered on its own office, instead of relying on a single
+  // shared map mounted elsewhere on the page.
+  it("mounts its own OfficeMap, naming only this office in the accessible label", async () => {
+    const langreoHtml = await renderCard({ ...OFFICES.langreo });
+    const madridHtml = await renderCard({ ...OFFICES.madrid });
+
+    expect(langreoHtml).toMatch(/role="region"/);
+    expect(langreoHtml).toContain(`aria-label="Mapa de ubicación de ${OFFICES.langreo.name}"`);
+    expect(langreoHtml).not.toContain(`aria-label="Mapa de ubicación de ${OFFICES.madrid.name}"`);
+
+    expect(madridHtml).toMatch(/role="region"/);
+    expect(madridHtml).toContain(`aria-label="Mapa de ubicación de ${OFFICES.madrid.name}"`);
+    expect(madridHtml).not.toContain(`aria-label="Mapa de ubicación de ${OFFICES.langreo.name}"`);
+  });
+
+  it("places its own OfficeMap after the address/contact/directions content", async () => {
+    const html = await renderCard({ ...OFFICES.langreo });
+
+    const directionsIndex = html.indexOf("Cómo llegar");
+    const mapIndex = html.indexOf('role="region"');
+
+    expect(mapIndex).toBeGreaterThan(directionsIndex);
   });
 });

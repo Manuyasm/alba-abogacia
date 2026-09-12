@@ -10,10 +10,16 @@ import { waitForHydration } from "./support/cap";
  *
  * office-map-widget PR2 (task 5.2): extended with `/el-despacho` (the other
  * page rendering `OfficeCard`) and, on both office-map pages, an explicit
- * scroll-into-view + hydration wait for the map region before scanning, so
- * the scan covers the offices section with the real hydrated map present —
- * not just its server-rendered shell.
+ * scroll-into-view + hydration wait for each map region before scanning, so
+ * the scan covers the offices section with the real hydrated maps present —
+ * not just their server-rendered shell.
+ *
+ * office-map-per-office redesign: each `OfficeCard` now mounts its own map
+ * region (one per office) instead of a single shared one, so the wait loop
+ * below waits for every office's region in turn.
  */
+
+const OFFICE_MAP_REGION_NAMES = ["Mapa de ubicación de Langreo (Asturias)", "Mapa de ubicación de Madrid"];
 
 const PAGES = [
   { path: "/contacto", label: "standalone contact page", hasContactForm: true, hasOfficeMap: false },
@@ -37,12 +43,15 @@ for (const { path, label, hasContactForm, hasOfficeMap } of PAGES) {
     }
 
     if (hasOfficeMap) {
-      // `OfficeMap` is `client:visible` — scroll it into view and wait for
-      // the real MapLibre GL canvas so the scan reflects the hydrated map,
-      // not just its reserved-size, unhydrated container.
-      const mapRegion = page.getByRole("region", { name: /Mapa con la ubicación de/ });
-      await mapRegion.scrollIntoViewIfNeeded();
-      await expect(mapRegion.locator("canvas.maplibregl-canvas")).toBeVisible({ timeout: 15_000 });
+      // Each `OfficeCard`'s `OfficeMap` is `client:visible` — scroll each
+      // office's own region into view and wait for its real MapLibre GL
+      // canvas so the scan reflects every hydrated map, not just their
+      // reserved-size, unhydrated containers.
+      for (const regionName of OFFICE_MAP_REGION_NAMES) {
+        const mapRegion = page.getByRole("region", { name: regionName });
+        await mapRegion.scrollIntoViewIfNeeded();
+        await expect(mapRegion.locator("canvas.maplibregl-canvas")).toBeVisible({ timeout: 15_000 });
+      }
     }
 
     const results = await new AxeBuilder({ page })
