@@ -15,6 +15,14 @@ export interface OfficeFact {
   /** e.g. "tel:985694493". Omitted entirely when unconfirmed. */
   phoneHref?: string;
   email?: string;
+  /**
+   * Geocoded coordinates (office-map-widget change, OSM Nominatim lookup,
+   * 2026-09-12). Langreo is a street-level approximation — Nominatim could
+   * not resolve the exact building for this address, only its street.
+   * Madrid is an exact house-number match. Consumed by `OfficeMap.tsx`.
+   */
+  lat: number;
+  lon: number;
 }
 
 /** Full site branding — used in page `<title>`s and the footer. */
@@ -40,11 +48,15 @@ export const OFFICES: { langreo: OfficeFact; madrid: OfficeFact } = {
     phone: "985694493",
     phoneHref: "tel:985694493",
     email: PRIMARY_EMAIL,
+    lat: 43.3078225,
+    lon: -5.6961254,
   },
   madrid: {
     name: "Madrid",
     // Phone and email are unconfirmed for this office — intentionally
     // omitted rather than fabricated (see memory #2643).
     addressLines: ["C/ Bravo Murillo, nº 377, 2º, Madrid"],
+    lat: 40.465928,
+    lon: -3.6906199,
   },
 };

@@ -19,6 +19,19 @@ describe("site-facts", () => {
     expect(OFFICES.madrid.email).toBeUndefined();
   });
 
+  // Geocoded via OSM Nominatim (office-map-widget change). Langreo is a
+  // street-level approximation (not an exact building match); Madrid is an
+  // exact house-number match.
+  it("exposes geocoded lat/lon coordinates for the Langreo office", () => {
+    expect(OFFICES.langreo.lat).toBe(43.3078225);
+    expect(OFFICES.langreo.lon).toBe(-5.6961254);
+  });
+
+  it("exposes geocoded lat/lon coordinates for the Madrid office", () => {
+    expect(OFFICES.madrid.lat).toBe(40.465928);
+    expect(OFFICES.madrid.lon).toBe(-3.6906199);
+  });
+
   it("exposes distinct SITE_NAME (full branding) and BRAND_NAME (JSON-LD-safe short form)", () => {
     expect(SITE_NAME).toBe("ALBA Abogacía & Consulting");
     expect(BRAND_NAME).toBe("Alba Abogacía");
