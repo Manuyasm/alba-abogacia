@@ -375,3 +375,23 @@ h6 {
   transition-duration: 200ms;
   transition-timing-function: ease-out;
 }
+
+/*
+ * Narrow ClientRouter adoption (PR F, spec: "Narrow ClientRouter Adoption" —
+ * "page fades of ~200-250ms"). Astro's `<ClientRouter />` assigns the
+ * document root the CSS View Transitions default name ("root") and, absent
+ * any override, the browser's own UA-default duration governs
+ * `::view-transition-group(root)`. This rule pins it explicitly inside the
+ * required band instead of relying on that implicit default. 220ms sits
+ * inside the *same* 150-250ms interactive bound already enforced above (no
+ * new guardrail band needed). Astro's own bundled `viewtransitions.css`
+ * already disables all `::view-transition-*` animation under
+ * `prefers-reduced-motion` — see design's "Cross-cutting" notes; this
+ * project's global reduced-motion block does not need to (and structurally
+ * cannot, since `*` does not match view-transition pseudo-elements)
+ * duplicate that.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+}

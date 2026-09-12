@@ -12,13 +12,12 @@ import { initScrollReveal } from "./scroll-reveal";
  * attribute selector (JS stays variant-agnostic — it only toggles the
  * pending/visible classes, regardless of which variant value is present), an
  * explicit ~15% intersection threshold, and a returned `disconnect()` used by
- * a future PR (F) to re-init after client-side navigation.
+ * `BaseLayout.astro` (PR F) to re-init after client-side navigation.
  *
- * `initScrollReveal` also runs once automatically on module import (design:
- * "auto-inits on import"). That side effect fires before these mocks exist
- * and finds no `[data-reveal]` elements in the empty jsdom document, so it is
- * harmless here — every test below calls the exported function explicitly
- * against an isolated `root` container instead of relying on the auto-init.
+ * As of PR F, `initScrollReveal` no longer self-invokes on module import —
+ * `BaseLayout.astro`'s `astro:page-load` listener is the sole caller. Every
+ * test below calls the exported function explicitly against an isolated
+ * `root` container.
  */
 
 class MockIntersectionObserver {

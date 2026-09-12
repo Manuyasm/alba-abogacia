@@ -1,5 +1,6 @@
 ---
 import "@/styles/global.css";
+import { ClientRouter } from "astro:transitions";
 import { BRAND_NAME, OFFICES, PRIMARY_EMAIL } from "@/lib/site-facts";
 import SiteHeader from "@/components/common/SiteHeader.astro";
 import SiteFooter from "@/components/common/SiteFooter.astro";
@@ -61,6 +62,12 @@ const organizationJsonLd = {
     <meta property="og:url" content={canonicalUrl} />
     {ogImage && <meta property="og:image" content={ogImage} />}
     <script is:inline type="application/ld+json" set:html={JSON.stringify(organizationJsonLd)} />
+    <!-- Narrow ClientRouter adoption (spec: "Narrow ClientRouter Adoption";
+         design decision #9). Native View Transitions for document
+         navigation only — this project stays a static multi-page site, not
+         a full SPA; see `src/lib/motion/*`'s `astro:page-load` re-init
+         wiring below and `SiteHeader.astro`'s `transition:persist` logo. -->
+    <ClientRouter />
   </head>
   <body>
     <a
@@ -73,10 +80,34 @@ const organizationJsonLd = {
     <slot />
     <SiteFooter />
     <script>
-      import "@/lib/motion/scroll-reveal";
-      import "@/lib/motion/header-scroll";
-      import "@/lib/motion/faq-animate";
-      import "@/lib/analytics/click-tracking";
+      import { initScrollReveal } from "@/lib/motion/scroll-reveal";
+      import { initHeaderScroll } from "@/lib/motion/header-scroll";
+      import { initFaqAnimation } from "@/lib/motion/faq-animate";
+      import { initClickTracking } from "@/lib/analytics/click-tracking";
+
+      // Design decision #9 ("ClientRouter re-init"): this is now the SOLE
+      // place that ever calls these four `init*` functions — each module's
+      // own former self-invoking auto-init-on-import block was removed in
+      // PR F, because `astro:page-load` fires on BOTH the very first page
+      // load (via the native `window` `load` event, see Astro's
+      // `transitions/router.js`) AND every subsequent client-side
+      // navigation. Keeping a second, independent auto-init source would
+      // double-bind every listener on the very first load already, which is
+      // not "idempotent" for `click-tracking`: two listeners on one
+      // `[data-track]` node fire `trackEvent()` twice per click, directly
+      // violating "no duplicate Umami events" (spec: "analytics-events").
+      // Centralizing on one disconnect-then-reinit owner avoids that for
+      // every module, including the persisted header's CTA.
+      let disconnectFns: Array<() => void> = [];
+
+      function reinitMotionModules(): void {
+        for (const disconnect of disconnectFns) {
+          disconnect();
+        }
+        disconnectFns = [initScrollReveal(), initHeaderScroll(), initFaqAnimation(), initClickTracking()];
+      }
+
+      document.addEventListener("astro:page-load", reinitMotionModules);
     </script>
   </body>
 </html>
