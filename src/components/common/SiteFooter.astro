@@ -33,13 +33,21 @@ const footerLinkClasses =
         <p>{langreo.addressLines[0]}</p>
         <p class="mt-1">
           Teléfono:{" "}
-          <a href={langreo.phoneHref} class={`font-medium text-brand-red underline underline-offset-2 transition-interactive motion-reduce:transition-none hover:text-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red`}>
+          <a
+            href={langreo.phoneHref}
+            class={`font-medium text-brand-red underline underline-offset-2 transition-interactive motion-reduce:transition-none hover:text-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red`}
+            data-track="phone_click"
+          >
             {langreo.phone}
           </a>
         </p>
         <p class="mt-1">
           Email:{" "}
-          <a href={`mailto:${langreo.email}`} class={`font-medium text-brand-red underline underline-offset-2 transition-interactive motion-reduce:transition-none hover:text-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red`}>
+          <a
+            href={`mailto:${langreo.email}`}
+            class={`font-medium text-brand-red underline underline-offset-2 transition-interactive motion-reduce:transition-none hover:text-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red`}
+            data-track="email_click"
+          >
             {langreo.email}
           </a>
         </p>

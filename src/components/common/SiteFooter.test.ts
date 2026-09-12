@@ -58,4 +58,16 @@ describe("SiteFooter", () => {
     expect(html).not.toContain("googleusercontent");
     expect(html).not.toContain("aida-public");
   });
+
+  // animations-v2 PR E, design decision #8: click-tracking wiring — the
+  // Langreo phone/email links carry the `[data-track]` hook `click-tracking.ts` reads.
+  it("marks the phone and email links with the click-tracking data-track hooks", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(SiteFooter, {
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    expect(html).toMatch(/href="tel:[^"]*"[^>]*data-track="phone_click"/);
+    expect(html).toMatch(/href="mailto:info@alba-abogacia\.es"[^>]*data-track="email_click"/);
+  });
 });

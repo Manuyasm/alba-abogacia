@@ -9,7 +9,7 @@ import {
   type SubmitEvent,
 } from "react";
 import { ContactSchema, type ContactFormData } from "@/lib/validation/contact";
-import { trackContactFormResult } from "@/lib/analytics/umami";
+import { trackContactFormResult, trackEvent } from "@/lib/analytics/umami";
 
 /**
  * Reusable contact form island (spec: "Form Structure and Field Set", "Field
@@ -41,10 +41,14 @@ import { trackContactFormResult } from "@/lib/analytics/umami";
  * with `{ token }` — `bubbles: true, composed: true` per Cap.js's own
  * implementation — so the listener on the slot catches it regardless of
  * whether it bubbles up from the widget or (as in tests) is dispatched
- * directly on the slot. Umami events fire only after the server response
- * resolves (spec: "Post-Confirmation Umami Event Firing") — never on raw
- * submit, matching the "server-confirmed only" contract established in
- * PR2's `trackContactFormResult`.
+ * directly on the slot. Result Umami events (`contact_form_success`/
+ * `contact_form_error`) fire only after the server response resolves (spec:
+ * "Post-Confirmation Umami Event Firing") — never on raw submit, matching
+ * the "server-confirmed only" contract established in PR2's
+ * `trackContactFormResult`. The one exception is `contact_form_started`
+ * (spec: "analytics-events" — "Confirmed Umami Event Set Only"), which fires
+ * on the user's first field focus, deduped per mount via a `useRef` flag so
+ * it never re-fires for later interactions on the same form instance.
  */
 
 /**
@@ -121,7 +125,48 @@ const FOCUS_ORDER: FieldName[] = [
 const GENERIC_ERROR_MESSAGE =
   "No se ha podido enviar el formulario. Inténtelo de nuevo en unos minutos.";
 const SUCCESS_MESSAGE =
-  "Gracias por su mensaje. Nos pondremos en contacto con usted lo antes posible.";
+  "Su consulta se ha enviado correctamente. Nos pondremos en contacto con usted lo antes posible.";
+const CAP_VERIFIED_MESSAGE = "Verificación completada.";
+
+/**
+ * Reserved-space, always-rendered field error message (animations-v2 PR E,
+ * "validation-error state"). The paragraph itself is never conditionally
+ * mounted/unmounted — only its text and opacity change — so an error
+ * appearing never causes an abrupt layout jump: the `min-h` reserves the
+ * line's height up front, and the opacity transition is the only visible
+ * change. `aria-describedby` on the field is therefore always valid (design:
+ * "aria-describedby unconditional").
+ */
+function FieldError({ id, message }: { id: string; message?: string }) {
+  return (
+    <p
+      id={id}
+      role={message ? "alert" : undefined}
+      className="min-h-[1.25rem] text-sm text-error opacity-0 transition-opacity duration-200 motion-reduce:transition-none data-[has-error=true]:opacity-100"
+      data-has-error={Boolean(message)}
+    >
+      {message ?? ""}
+    </p>
+  );
+}
+
+/** Discreet inline check glyph for the success state (animations-v2 PR E). */
+function CheckIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5 shrink-0"
+    >
+      <path d="M4 10.5 8 14.5 16 6" />
+    </svg>
+  );
+}
 
 function cx(...classes: Array<string | false | undefined>): string {
   return classes.filter(Boolean).join(" ");
@@ -144,6 +189,10 @@ export function ContactForm({ className }: ContactFormProps) {
   const [status, setStatus] = useState<SubmitStatus>("idle");
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  /** Tracks whether the user has attempted at least one submission — the
+   * "valid-field state" (animations-v2 PR E) only ever appears once a field
+   * has actually been validated, never optimistically on first render. */
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
   const nombreRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -151,6 +200,11 @@ export function ContactForm({ className }: ContactFormProps) {
   const mensajeRef = useRef<HTMLTextAreaElement>(null);
   const consentRef = useRef<HTMLInputElement>(null);
   const capSlotRef = useRef<HTMLDivElement>(null);
+  /** One-shot dedup flag for `contact_form_started` (spec: "Started fires
+   * once per session interaction") — set on the first field focus and never
+   * reset for the lifetime of this mount, so later focuses/edits (including
+   * a post-success form reset) never re-fire it. */
+  const hasStartedFormRef = useRef(false);
 
   const focusRefs: Partial<Record<FieldName, RefObject<HTMLElement | null>>> = {
     nombre: nombreRef,
@@ -174,6 +228,23 @@ export function ContactForm({ className }: ContactFormProps) {
     },
     [],
   );
+
+  /**
+   * Fires `contact_form_started` (spec: "analytics-events" — "Confirmed
+   * Umami Event Set Only") on the user's first focus into any visible
+   * ContactForm field. Guarded by `hasStartedFormRef` so subsequent focuses
+   * — on the same field or a different one — never re-fire it for this
+   * mount (spec scenario: "Started fires once per session interaction").
+   * A bare named event, same as `contact_form_success`/`contact_form_error`
+   * — no field value or other property is ever attached.
+   */
+  const handleFirstInteraction = useCallback(() => {
+    if (hasStartedFormRef.current) {
+      return;
+    }
+    hasStartedFormRef.current = true;
+    trackEvent("contact_form_started");
+  }, []);
 
   // Creates and appends the real `<cap-widget>` element imperatively
   // (client-only, post-hydration) — see the file-level doc comment for why
@@ -210,6 +281,19 @@ export function ContactForm({ className }: ContactFormProps) {
     };
   }, [handleChange, capWidgetEndpoint]);
 
+  /**
+   * CSS-only "valid-field state" (animations-v2 PR E): a subtle success
+   * border, shown only once the user has attempted a submission and this
+   * specific field currently has no error. Never shown before the first
+   * submit attempt, so a blank untouched field is never marked "valid".
+   */
+  function fieldStateClasses(field: FieldName): string | false {
+    if (errors[field]) {
+      return "border-error";
+    }
+    return hasAttemptedSubmit && "border-success";
+  }
+
   function focusFirstInvalidField(fieldErrors: Partial<Record<FieldName, string>>) {
     for (const field of FOCUS_ORDER) {
       const ref = focusRefs[field];
@@ -224,6 +308,7 @@ export function ContactForm({ className }: ContactFormProps) {
     event.preventDefault();
     setServerError(null);
     setSuccessMessage(null);
+    setHasAttemptedSubmit(true);
 
     const result = ContactSchema.safeParse(values);
     if (!result.success) {
@@ -255,6 +340,7 @@ export function ContactForm({ className }: ContactFormProps) {
         setStatus("success");
         setSuccessMessage(SUCCESS_MESSAGE);
         setValues(INITIAL_VALUES);
+        setHasAttemptedSubmit(false);
         trackContactFormResult({ status: "success" });
       } else {
         setStatus("error");
@@ -303,15 +389,12 @@ export function ContactForm({ className }: ContactFormProps) {
             autoComplete="name"
             value={values.nombre}
             onChange={(event) => handleChange("nombre", event.target.value)}
+            onFocus={handleFirstInteraction}
             aria-invalid={Boolean(errors.nombre)}
-            aria-describedby={errors.nombre ? nombreErrorId : undefined}
-            className={cx(FIELD_BASE_CLASSES, errors.nombre && "border-error")}
+            aria-describedby={nombreErrorId}
+            className={cx(FIELD_BASE_CLASSES, fieldStateClasses("nombre"))}
           />
-          {errors.nombre && (
-            <p id={nombreErrorId} role="alert" className="text-sm text-error">
-              {errors.nombre}
-            </p>
-          )}
+          <FieldError id={nombreErrorId} message={errors.nombre} />
         </div>
 
         <div className="flex flex-col gap-2">
@@ -326,15 +409,12 @@ export function ContactForm({ className }: ContactFormProps) {
             autoComplete="email"
             value={values.email}
             onChange={(event) => handleChange("email", event.target.value)}
+            onFocus={handleFirstInteraction}
             aria-invalid={Boolean(errors.email)}
-            aria-describedby={errors.email ? emailErrorId : undefined}
-            className={cx(FIELD_BASE_CLASSES, errors.email && "border-error")}
+            aria-describedby={emailErrorId}
+            className={cx(FIELD_BASE_CLASSES, fieldStateClasses("email"))}
           />
-          {errors.email && (
-            <p id={emailErrorId} role="alert" className="text-sm text-error">
-              {errors.email}
-            </p>
-          )}
+          <FieldError id={emailErrorId} message={errors.email} />
         </div>
 
         <div className="flex flex-col gap-2">
@@ -349,15 +429,12 @@ export function ContactForm({ className }: ContactFormProps) {
             autoComplete="tel"
             value={values.telefono}
             onChange={(event) => handleChange("telefono", event.target.value)}
+            onFocus={handleFirstInteraction}
             aria-invalid={Boolean(errors.telefono)}
-            aria-describedby={errors.telefono ? telefonoErrorId : undefined}
-            className={cx(FIELD_BASE_CLASSES, errors.telefono && "border-error")}
+            aria-describedby={telefonoErrorId}
+            className={cx(FIELD_BASE_CLASSES, fieldStateClasses("telefono"))}
           />
-          {errors.telefono && (
-            <p id={telefonoErrorId} role="alert" className="text-sm text-error">
-              {errors.telefono}
-            </p>
-          )}
+          <FieldError id={telefonoErrorId} message={errors.telefono} />
         </div>
 
         <div className="flex flex-col gap-2">
@@ -371,15 +448,12 @@ export function ContactForm({ className }: ContactFormProps) {
             rows={5}
             value={values.mensaje}
             onChange={(event) => handleChange("mensaje", event.target.value)}
+            onFocus={handleFirstInteraction}
             aria-invalid={Boolean(errors.mensaje)}
-            aria-describedby={errors.mensaje ? mensajeErrorId : undefined}
-            className={cx(FIELD_BASE_CLASSES, errors.mensaje && "border-error")}
+            aria-describedby={mensajeErrorId}
+            className={cx(FIELD_BASE_CLASSES, fieldStateClasses("mensaje"))}
           />
-          {errors.mensaje && (
-            <p id={mensajeErrorId} role="alert" className="text-sm text-error">
-              {errors.mensaje}
-            </p>
-          )}
+          <FieldError id={mensajeErrorId} message={errors.mensaje} />
         </div>
 
         {/* Honeypot: invisible to real users (off-screen, aria-hidden, out of tab
@@ -404,11 +478,12 @@ export function ContactForm({ className }: ContactFormProps) {
             type="checkbox"
             checked={values.aceptaPrivacidad}
             onChange={(event) => handleChange("aceptaPrivacidad", event.target.checked)}
+            onFocus={handleFirstInteraction}
             aria-invalid={Boolean(errors.aceptaPrivacidad)}
-            aria-describedby={errors.aceptaPrivacidad ? consentErrorId : undefined}
+            aria-describedby={consentErrorId}
             className={cx(
               "mt-1 h-6 w-6 shrink-0 rounded border-brand-brown text-brand-red transition-colors duration-200 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2",
-              errors.aceptaPrivacidad && "border-error",
+              fieldStateClasses("aceptaPrivacidad"),
             )}
           />
           <label htmlFor={consentId} className="text-sm text-ink">
@@ -418,11 +493,7 @@ export function ContactForm({ className }: ContactFormProps) {
             </a>
           </label>
         </div>
-        {errors.aceptaPrivacidad && (
-          <p id={consentErrorId} role="alert" className="text-sm text-error">
-            {errors.aceptaPrivacidad}
-          </p>
-        )}
+        <FieldError id={consentErrorId} message={errors.aceptaPrivacidad} />
 
         <div>
           {/* Designated Cap widget mount point (design rev.2 / spec: "Server-Side
@@ -436,11 +507,17 @@ export function ContactForm({ className }: ContactFormProps) {
               `PUBLIC_CAP_SITE_KEY`. Server-side verification against the same
               instance is wired in `src/pages/api/contacto.ts`. */}
           <div ref={capSlotRef} data-testid="cap-widget-slot" className="my-2 min-h-[2px]" />
-          {errors.capToken && (
-            <p id={capTokenErrorId} role="alert" className="text-sm text-error">
-              {errors.capToken}
+          {/* Discreet Cap-verification state (animations-v2 PR E): a
+              CSS-only fade-in confirmation once the widget reports a solved
+              token — cleared again on the next successful submission along
+              with every other field, since `values.capToken` resets to "". */}
+          {values.capToken && (
+            <p className="animate-fade-in motion-reduce:animate-none flex items-center gap-1 text-sm text-success">
+              <CheckIcon />
+              {CAP_VERIFIED_MESSAGE}
             </p>
           )}
+          <FieldError id={capTokenErrorId} message={errors.capToken} />
         </div>
 
         {serverError && (
@@ -456,8 +533,9 @@ export function ContactForm({ className }: ContactFormProps) {
           <p
             role="status"
             aria-live="polite"
-            className="animate-fade-in motion-reduce:animate-none rounded-md border border-success bg-success/10 px-4 py-3 text-sm text-success"
+            className="animate-fade-in motion-reduce:animate-none flex items-center gap-2 rounded-md border border-success bg-success/10 px-4 py-3 text-sm text-success"
           >
+            <CheckIcon />
             {successMessage}
           </p>
         )}

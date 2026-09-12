@@ -1,0 +1,79 @@
+import { trackEvent } from "./umami";
+
+/**
+ * Fail-open Umami click-tracking utility (design decision #8, "Umami click
+ * events" — generic `trackEvent(name)` + `[data-track]` attribute convention,
+ * one module reused across every CTA instead of a per-page inline script).
+ *
+ * RESOLVED SCOPE (animations-v2 PR E): only `phone_click` / `email_click` /
+ * `appointment_click` are wired. `whatsapp_click` (no WhatsApp link exists,
+ * number unconfirmed), `office_selection` (rejected by client), and
+ * `service_view` (no per-service pages exist) are intentionally NOT
+ * implemented — `TRACKED_CLICK_EVENT_NAMES` below is the single source of
+ * truth for which `data-track` values this module recognizes; any other
+ * value is silently ignored (fail-open, never throws).
+ *
+ * Exactly one `click` listener is attached per matched `[data-track]`
+ * element at init time (never event-delegation on a shared ancestor), so a
+ * single click can never fire more than one event — there is no scenario
+ * where overlapping listeners or an animation re-triggering the DOM node
+ * causes a duplicate `trackEvent()` call.
+ */
+export const TRACKED_CLICK_EVENT_NAMES = ["phone_click", "email_click", "appointment_click"] as const;
+
+export type ClickTrackedEventName = (typeof TRACKED_CLICK_EVENT_NAMES)[number];
+
+function isTrackedClickEventName(value: string): value is ClickTrackedEventName {
+  return (TRACKED_CLICK_EVENT_NAMES as readonly string[]).includes(value);
+}
+
+/** No-op disconnect returned from every fail-open early exit, so callers can
+ * always treat the return value as a safe, callable teardown function. */
+function noopDisconnect(): void {}
+
+export function initClickTracking(root: ParentNode = document): () => void {
+  if (typeof window === "undefined") {
+    return noopDisconnect;
+  }
+
+  const elements = Array.from(root.querySelectorAll<HTMLElement>("[data-track]"));
+
+  const listeners: Array<{ element: HTMLElement; handler: () => void }> = [];
+  for (const element of elements) {
+    const eventName = element.dataset.track;
+    if (!eventName || !isTrackedClickEventName(eventName)) {
+      continue;
+    }
+    const handler = () => trackEvent(eventName);
+    element.addEventListener("click", handler);
+    listeners.push({ element, handler });
+  }
+
+  if (listeners.length === 0) {
+    return noopDisconnect;
+  }
+
+  let disconnected = false;
+  return function disconnect() {
+    if (disconnected) {
+      return;
+    }
+    disconnected = true;
+    for (const { element, handler } of listeners) {
+      element.removeEventListener("click", handler);
+    }
+  };
+}
+
+// Auto-init once, site-wide, on module import (same convention as
+// `scroll-reveal.ts`/`header-scroll.ts`/`faq-animate.ts`). The returned
+// `disconnect()` is intentionally unused here — re-init after client-side
+// navigation is wired up in `BaseLayout.astro` in a later PR (design
+// decision #9).
+if (typeof document !== "undefined") {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => initClickTracking());
+  } else {
+    initClickTracking();
+  }
+}

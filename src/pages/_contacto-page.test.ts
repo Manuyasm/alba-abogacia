@@ -38,4 +38,15 @@ describe("contacto.astro", () => {
 
     expect(html).toMatch(/<main[^>]*id="main-content"/);
   });
+
+  // animations-v2 PR E, design decision #8: click-tracking wiring.
+  it("marks the phone link with the phone_click data-track hook", async () => {
+    const renderers = await loadRenderers([getContainerRenderer()]);
+    const container = await AstroContainer.create({ renderers });
+    const html = await container.renderToString(ContactoPage, {
+      request: new Request("https://alba-abogacia.es/contacto"),
+    });
+
+    expect(html).toMatch(/href="tel:[^"]*"[^>]*data-track="phone_click"/);
+  });
 });

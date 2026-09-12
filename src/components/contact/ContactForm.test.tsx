@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ContactForm } from "./ContactForm";
-import { trackContactFormResult } from "@/lib/analytics/umami";
+import { trackContactFormResult, trackEvent } from "@/lib/analytics/umami";
 
 /**
  * Component tests for the reusable ContactForm island (spec: "Form Structure and
@@ -15,6 +15,7 @@ import { trackContactFormResult } from "@/lib/analytics/umami";
 
 vi.mock("@/lib/analytics/umami", () => ({
   trackContactFormResult: vi.fn(),
+  trackEvent: vi.fn(),
 }));
 
 // The real `@cap.js/widget` package registers a `cap-widget` custom element
@@ -70,6 +71,7 @@ function fillValidVisibleFields() {
 
 beforeEach(() => {
   vi.mocked(trackContactFormResult).mockClear();
+  vi.mocked(trackEvent).mockClear();
 });
 
 afterEach(() => {
@@ -274,7 +276,11 @@ describe("ContactForm submission (mocked fetch — no real /api/contacto in this
     solveCapWidget(container);
     fireEvent.click(screen.getByRole("button", { name: SUBMIT_BUTTON_NAME }));
 
-    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/gracias/i));
+    await waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "Su consulta se ha enviado correctamente. Nos pondremos en contacto con usted lo antes posible.",
+      ),
+    );
     expect(trackContactFormResult).toHaveBeenCalledWith({ status: "success" });
   });
 
@@ -308,6 +314,92 @@ describe("ContactForm submission (mocked fetch — no real /api/contacto in this
   });
 });
 
+describe("ContactForm state animations (animations-v2 PR E: validation-error, valid-field, Cap-verification, success states)", () => {
+  it("reserves space for every field's error text and keeps aria-describedby linked even before any error exists", () => {
+    render(<ContactForm />);
+
+    const nombreInput = screen.getByLabelText("Nombre");
+    const describedById = nombreInput.getAttribute("aria-describedby");
+    expect(describedById).toBeTruthy();
+
+    // The reserved-space error paragraph already exists in the DOM before
+    // any submit attempt, with empty text — no layout jump can occur later
+    // because the element (and its reserved min-height) is already present.
+    const errorParagraph = document.getElementById(describedById as string);
+    expect(errorParagraph).not.toBeNull();
+    expect(errorParagraph).toHaveTextContent("");
+  });
+
+  it("populates the reserved error paragraph's text after a blocked submission, without replacing the element", () => {
+    vi.stubGlobal("fetch", vi.fn());
+    render(<ContactForm />);
+
+    const nombreInput = screen.getByLabelText("Nombre");
+    const describedById = nombreInput.getAttribute("aria-describedby") as string;
+    const errorParagraphBefore = document.getElementById(describedById);
+
+    fireEvent.click(screen.getByRole("button", { name: SUBMIT_BUTTON_NAME }));
+
+    const errorParagraphAfter = document.getElementById(describedById);
+    expect(errorParagraphAfter).toBe(errorParagraphBefore);
+    expect(errorParagraphAfter).toHaveTextContent("Introduzca su nombre.");
+  });
+
+  it("shows a discreet check icon alongside the exact success copy", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
+    vi.stubGlobal("fetch", fetchMock);
+    const { container } = render(<ContactForm />);
+
+    fillValidVisibleFields();
+    solveCapWidget(container);
+    fireEvent.click(screen.getByRole("button", { name: SUBMIT_BUTTON_NAME }));
+
+    const status = await screen.findByRole("status");
+    expect(status).toHaveTextContent(
+      "Su consulta se ha enviado correctamente. Nos pondremos en contacto con usted lo antes posible.",
+    );
+    expect(status.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+  });
+
+  it("shows a discreet verified indicator once the Cap widget reports a solved token, and clears it after a successful submission resets the form", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
+    vi.stubGlobal("fetch", fetchMock);
+    const { container } = render(<ContactForm />);
+
+    expect(screen.queryByText(/verificación completada/i)).not.toBeInTheDocument();
+
+    fillValidVisibleFields();
+    solveCapWidget(container);
+    expect(screen.getByText(/verificación completada/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: SUBMIT_BUTTON_NAME }));
+    await waitFor(() => expect(screen.getByRole("status")).toBeInTheDocument());
+
+    expect(screen.queryByText(/verificación completada/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("ContactForm contact_form_started analytics event (spec: 'analytics-events' — Confirmed Umami Event Set Only, scenario 'Started fires once per session interaction')", () => {
+  it("fires contact_form_started exactly once after the first field focus, and does not re-fire on a later field focus in the same mount", () => {
+    render(<ContactForm />);
+
+    expect(trackEvent).not.toHaveBeenCalled();
+
+    fireEvent.focus(screen.getByLabelText("Nombre"));
+    expect(trackEvent).toHaveBeenCalledTimes(1);
+    expect(trackEvent).toHaveBeenCalledWith("contact_form_started");
+
+    fireEvent.focus(screen.getByLabelText("Email"));
+    expect(trackEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not fire contact_form_started merely on render, before any user interaction", () => {
+    render(<ContactForm />);
+
+    expect(trackEvent).not.toHaveBeenCalled();
+  });
+});
+
 describe("ContactForm loading and result-message motion (spec: 'Submit-Button Loading State', 'Result-Message Fade-In Without Announcement Delay')", () => {
   it("keeps the submit button disabled and aria-busy for the full in-flight duration, then updates immediately once the response resolves — never gated behind an animation", async () => {
     let resolveFetch: (value: unknown) => void = () => {};
@@ -335,7 +427,9 @@ describe("ContactForm loading and result-message motion (spec: 'Submit-Button Lo
     // Asserted immediately after the microtask flush above — no `waitFor`
     // polling — so a future regression that gates the text behind an
     // animation's `transitionend`/`setTimeout` would fail this assertion.
-    expect(screen.getByRole("status")).toHaveTextContent(/gracias por su mensaje/i);
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Su consulta se ha enviado correctamente. Nos pondremos en contacto con usted lo antes posible.",
+    );
     expect(screen.getByRole("button", { name: SUBMIT_BUTTON_NAME })).not.toBeDisabled();
     expect(screen.getByRole("button", { name: SUBMIT_BUTTON_NAME })).toHaveAttribute(
       "aria-busy",
