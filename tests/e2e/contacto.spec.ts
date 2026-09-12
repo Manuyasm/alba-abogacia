@@ -44,7 +44,7 @@ test.describe("Contact form — /contacto", () => {
     await expect(response.json()).resolves.toEqual({ success: true });
 
     await expect(page.getByRole("status")).toContainText(
-      "Gracias por su mensaje. Nos pondremos en contacto con usted lo antes posible.",
+      "Su consulta se ha enviado correctamente. Nos pondremos en contacto con usted lo antes posible.",
     );
     // Form resets on success — no leftover values, no stale error alerts.
     await expect(page.getByLabel("Nombre")).toHaveValue("");
@@ -172,6 +172,6 @@ test.describe("Contact form — embedded on / (#contacto)", () => {
 
     expect(response.status()).toBe(200);
     await expect(response.json()).resolves.toEqual({ success: true });
-    await expect(section.getByRole("status")).toContainText("Gracias por su mensaje");
+    await expect(section.getByRole("status")).toContainText("Su consulta se ha enviado correctamente");
   });
 });
