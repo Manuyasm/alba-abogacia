@@ -120,6 +120,11 @@ vi.mock("maplibre-gl", () => {
     Marker: MockMarker,
     Popup: MockPopup,
     AttributionControl: MockAttributionControl,
+    // office-map-widget PR2: `OfficeMap.tsx` calls this at module scope to
+    // point MapLibre at the vendored worker path (see `astro.config.mjs`'s
+    // `copyMapLibreWorkerAssets` plugin) — a no-op stub is enough here since
+    // jsdom never actually constructs a real Map/Worker.
+    setWorkerUrl: vi.fn(),
   };
 });
 
@@ -179,52 +184,77 @@ describe("OfficeMap markers", () => {
 });
 
 describe("OfficeMap camera behavior (design Decision 3: no animation, ever)", () => {
-  it("calls fitBounds with animate:false on load for all users", () => {
+  // office-map-widget PR2 deviation: PR1 called `map.fitBounds(...)` inside
+  // the async `load` handler. A real built E2E run (see apply-progress)
+  // caught a real bug this hid: `map.on("load", ...)` only fires once
+  // MapLibre's Web Worker-backed style/tile pipeline finishes — for the
+  // window between first paint and that event, both markers rendered at
+  // their raw, unfitted projected position (nearly on top of each other on
+  // screen for two offices this geographically close relative to zoom 0),
+  // which axe's `target-size` rule (WCAG 2.5.8) correctly flagged. Passing
+  // `bounds`/`fitBoundsOptions` directly to the `Map` constructor applies
+  // the initial camera fit synchronously at construction — no unfitted
+  // frame, and still exactly the same `animate:false`, never-`flyTo`/
+  // `easeTo` contract.
+  it("constructs the Map with the initial bounds and fitBoundsOptions.animate:false, for all users", () => {
     render(<OfficeMap offices={TEST_OFFICES} />);
-    triggerLoad();
 
-    expect(mapInstances[0]?.fitBounds).toHaveBeenCalledTimes(1);
-    const [, options] = mapInstances[0]!.fitBounds.mock.calls[0] as [unknown, { animate: boolean }];
-    expect(options.animate).toBe(false);
+    const options = mapInstances[0]?.options as {
+      bounds?: [number, number, number, number];
+      fitBoundsOptions?: { animate: boolean };
+    };
+    expect(options.bounds).toEqual([-5.6961254, 40.465928, -3.6906199, 43.3078225]);
+    expect(options.fitBoundsOptions?.animate).toBe(false);
   });
 
-  it("never calls flyTo or easeTo", () => {
+  it("never calls flyTo, easeTo, or the post-load fitBounds method", () => {
     render(<OfficeMap offices={TEST_OFFICES} />);
     triggerLoad();
 
     expect(mapInstances[0]?.flyTo).not.toHaveBeenCalled();
     expect(mapInstances[0]?.easeTo).not.toHaveBeenCalled();
+    expect(mapInstances[0]?.fitBounds).not.toHaveBeenCalled();
   });
 
-  it("still fits bounds with animate:false when prefers-reduced-motion is set (no branching by motion preference)", () => {
+  it("still constructs with animate:false when prefers-reduced-motion is set (no branching by motion preference)", () => {
     const matchMediaMock = vi.fn().mockReturnValue({ matches: true });
     vi.stubGlobal("matchMedia", matchMediaMock);
 
     render(<OfficeMap offices={TEST_OFFICES} />);
-    triggerLoad();
 
     expect(matchMediaMock).toHaveBeenCalledWith("(prefers-reduced-motion: reduce)");
-    const [, options] = mapInstances[0]!.fitBounds.mock.calls[0] as [unknown, { animate: boolean }];
-    expect(options.animate).toBe(false);
+    const options = mapInstances[0]?.options as { fitBoundsOptions?: { animate: boolean } };
+    expect(options.fitBoundsOptions?.animate).toBe(false);
 
     vi.unstubAllGlobals();
   });
 });
 
 describe("OfficeMap accessibility and layout", () => {
-  it("exposes role=img and an aria-label naming every office", () => {
+  // office-map-widget PR2 deviation: `role="img"` was found (via a real,
+  // built E2E run — see apply-progress) to trip axe's `nested-interactive`
+  // rule, because MapLibre GL's default `Marker` sets `role="button"
+  // tabindex="0"` on itself whenever a popup is attached (this maplibre-gl
+  // version's own documented accessibility behavior, not something this
+  // component opts into) — and ARIA's `img` role forbids focusable
+  // descendants. `role="region"` keeps the required accessible name/
+  // description (spec: "Accessible, Supplementary Presentation") without
+  // that ARIA conflict, since a region landmark may contain interactive
+  // content.
+  it("exposes role=region and an aria-label naming every office", () => {
     const { container } = render(<OfficeMap offices={TEST_OFFICES} />);
 
-    const region = container.querySelector('[role="img"]');
+    const region = container.querySelector('[role="region"]');
     expect(region).not.toBeNull();
     expect(region).toHaveAttribute("aria-label", expect.stringContaining("Langreo"));
     expect(region).toHaveAttribute("aria-label", expect.stringContaining("Madrid"));
+    expect(container.querySelector('[role="img"]')).toBeNull();
   });
 
   it("reserves an explicit sized box to avoid CLS", () => {
     const { container } = render(<OfficeMap offices={TEST_OFFICES} />);
 
-    const region = container.querySelector('[role="img"]');
+    const region = container.querySelector('[role="region"]');
     expect(region?.className).toMatch(/aspect-|min-h-/);
   });
 });

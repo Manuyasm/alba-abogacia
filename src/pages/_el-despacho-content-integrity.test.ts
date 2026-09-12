@@ -1,4 +1,10 @@
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
+import { getContainerRenderer } from "@astrojs/react/container-renderer";
+// Astro virtual module — only resolvable under Vite/Vitest (documented
+// Container API pattern for pages that mount a framework island). Needed
+// starting with office-map-widget PR2, since this page now mounts the
+// shared `<OfficeMap client:visible />` React island.
+import { loadRenderers } from "astro:container";
 import { describe, expect, it } from "vitest";
 import ElDespachoPage from "./el-despacho.astro";
 
@@ -13,7 +19,8 @@ import ElDespachoPage from "./el-despacho.astro";
 // pattern scan table.
 describe("el-despacho.astro (content integrity — no fabricated claims)", () => {
   it("contains none of the forbidden claim patterns anywhere in the full page", async () => {
-    const container = await AstroContainer.create();
+    const renderers = await loadRenderers([getContainerRenderer()]);
+    const container = await AstroContainer.create({ renderers });
     const html = await container.renderToString(ElDespachoPage, {
       request: new Request("https://alba-abogacia.es/el-despacho"),
     });

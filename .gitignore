@@ -9,6 +9,11 @@ node_modules/
 dist/
 .astro/
 
+# generated at dev/build start by astro.config.mjs's copyMapLibreWorkerAssets
+# plugin (verbatim copies of node_modules/maplibre-gl/dist worker files) —
+# never hand-edited, never committed.
+public/vendor/
+
 # environment
 .env
 .env.production

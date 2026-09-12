@@ -1,7 +1,15 @@
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
+import { getContainerRenderer } from "@astrojs/react/container-renderer";
+// Astro virtual module — only resolvable under Vite/Vitest (documented
+// Container API pattern for pages that mount a framework island). Needed
+// starting with office-map-widget PR2, since this page now mounts the
+// shared `<OfficeMap client:visible />` React island (matches
+// `_index-page.test.ts`'s established pattern).
+import { loadRenderers } from "astro:container";
 import { describe, expect, it } from "vitest";
 import ElDespachoPage from "./el-despacho.astro";
 import TeamTeaser from "@/components/home/TeamTeaser.astro";
+import { OFFICES } from "@/lib/site-facts";
 
 // Spec: "Page Existence", "Philosophy/Intro Section", "Team Profiles",
 // "Offices Section", "El Despacho FAQ", "Closing CTA", "Accessibility and
@@ -13,7 +21,8 @@ import TeamTeaser from "@/components/home/TeamTeaser.astro";
 // team taxonomy match against Home's `TeamTeaser.astro`.
 describe("el-despacho.astro (page composition)", () => {
   async function renderElDespacho(): Promise<string> {
-    const container = await AstroContainer.create();
+    const renderers = await loadRenderers([getContainerRenderer()]);
+    const container = await AstroContainer.create({ renderers });
     return container.renderToString(ElDespachoPage, {
       request: new Request("https://alba-abogacia.es/el-despacho"),
     });
@@ -141,6 +150,34 @@ describe("el-despacho.astro (page composition)", () => {
     expect(officesSection).toContain("Madrid");
     const mapNotes = officesSection.match(/Atención presencial y telemática\./g) ?? [];
     expect(mapNotes).toHaveLength(2);
+  });
+
+  // office-map-widget PR2 (task 3.3): the shared map is mounted once, below
+  // both OfficeCards, inside the same "Dónde estamos" section — not
+  // duplicated per card (design's page-mounting decision).
+  it("mounts the shared OfficeMap below both OfficeCards, naming both offices in its accessible label", async () => {
+    const html = await renderElDespacho();
+
+    const officesStart = html.indexOf("Dónde estamos");
+    const faqStart = html.indexOf("Preguntas frecuentes");
+    const officesSection = html.slice(officesStart, faqStart);
+
+    expect(officesSection).toMatch(/role="region"/);
+    expect(officesSection).toContain(
+      `aria-label="Mapa con la ubicación de: ${OFFICES.langreo.name}, ${OFFICES.madrid.name}"`,
+    );
+
+    // The map must come after both OfficeCards, not interleaved between them.
+    const lastCardIndex = officesSection.lastIndexOf("Atención presencial y telemática.");
+    const mapIndex = officesSection.indexOf('role="region"');
+    expect(mapIndex).toBeGreaterThan(lastCardIndex);
+  });
+
+  it('still renders both unchanged "Cómo llegar" links alongside the map', async () => {
+    const html = await renderElDespacho();
+
+    expect(html).toContain(`aria-label="Cómo llegar a ${OFFICES.langreo.name}"`);
+    expect(html).toContain(`aria-label="Cómo llegar a ${OFFICES.madrid.name}"`);
   });
 
   it("renders a FaqAccordion with 4 details/summary items", async () => {

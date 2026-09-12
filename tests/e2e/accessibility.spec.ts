@@ -7,15 +7,22 @@ import { waitForHydration } from "./support/cap";
  * target) via axe-core on every page this change ships or touches. Zero
  * critical/serious violations required; moderate/minor findings are
  * documented in the PR5 apply-progress report rather than silently ignored.
+ *
+ * office-map-widget PR2 (task 5.2): extended with `/el-despacho` (the other
+ * page rendering `OfficeCard`) and, on both office-map pages, an explicit
+ * scroll-into-view + hydration wait for the map region before scanning, so
+ * the scan covers the offices section with the real hydrated map present —
+ * not just its server-rendered shell.
  */
 
 const PAGES = [
-  { path: "/contacto", label: "standalone contact page", hasContactForm: true },
-  { path: "/", label: "home page (includes #contacto)", hasContactForm: true },
-  { path: "/politica-privacidad", label: "privacy policy page", hasContactForm: false },
+  { path: "/contacto", label: "standalone contact page", hasContactForm: true, hasOfficeMap: false },
+  { path: "/", label: "home page (includes #contacto)", hasContactForm: true, hasOfficeMap: true },
+  { path: "/el-despacho", label: "el despacho page (offices + map)", hasContactForm: false, hasOfficeMap: true },
+  { path: "/politica-privacidad", label: "privacy policy page", hasContactForm: false, hasOfficeMap: false },
 ];
 
-for (const { path, label, hasContactForm } of PAGES) {
+for (const { path, label, hasContactForm, hasOfficeMap } of PAGES) {
   test(`axe scan: ${label} (${path}) has no critical or serious violations`, async ({ page }) => {
     await page.goto(path);
     // Let the client:idle island hydrate and the real Cap widget mount
@@ -27,6 +34,15 @@ for (const { path, label, hasContactForm } of PAGES) {
       await waitForHydration(page);
     } else {
       await page.waitForLoadState("load");
+    }
+
+    if (hasOfficeMap) {
+      // `OfficeMap` is `client:visible` — scroll it into view and wait for
+      // the real MapLibre GL canvas so the scan reflects the hydrated map,
+      // not just its reserved-size, unhydrated container.
+      const mapRegion = page.getByRole("region", { name: /Mapa con la ubicación de/ });
+      await mapRegion.scrollIntoViewIfNeeded();
+      await expect(mapRegion.locator("canvas.maplibregl-canvas")).toBeVisible({ timeout: 15_000 });
     }
 
     const results = await new AxeBuilder({ page })
