@@ -162,14 +162,14 @@ describe("el-despacho.astro (page composition)", () => {
     const faqStart = html.indexOf("Preguntas frecuentes");
     const officesSection = html.slice(officesStart, faqStart);
 
-    expect(officesSection).toMatch(/role="img"/);
+    expect(officesSection).toMatch(/role="region"/);
     expect(officesSection).toContain(
       `aria-label="Mapa con la ubicación de: ${OFFICES.langreo.name}, ${OFFICES.madrid.name}"`,
     );
 
     // The map must come after both OfficeCards, not interleaved between them.
     const lastCardIndex = officesSection.lastIndexOf("Atención presencial y telemática.");
-    const mapIndex = officesSection.indexOf('role="img"');
+    const mapIndex = officesSection.indexOf('role="region"');
     expect(mapIndex).toBeGreaterThan(lastCardIndex);
   });
 
