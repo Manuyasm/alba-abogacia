@@ -74,7 +74,7 @@ const primaryCtaClasses =
 
 <BaseLayout title={`El despacho | ${SITE_NAME}`} description={EL_DESPACHO_DESCRIPTION}>
   <main id="main-content">
-    <section class="mx-auto max-w-6xl px-4 py-16" data-reveal>
+    <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
       <h1 class="font-heading text-4xl font-semibold text-brand-brown sm:text-5xl">Quiénes somos</h1>
       <p class="mt-4 max-w-2xl text-lg text-muted">
         Alba Abogacía &amp; Consulting es un despacho que combina asesoramiento jurídico y consultoría
@@ -111,12 +111,12 @@ const primaryCtaClasses =
       </ul>
     </section>
 
-    <section class="mx-auto max-w-6xl px-4 py-16" data-reveal>
+    <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
       <h2 class="font-heading text-3xl font-semibold text-brand-brown">El equipo</h2>
       <ul class="mt-8 grid gap-6 sm:grid-cols-2">
         {
-          TEAM.map((member) => (
-            <li>
+          TEAM.map((member, index) => (
+            <li data-reveal="stagger" style={`--reveal-delay:${index * 70}ms`}>
               <TeamCard name={member.name} role={member.role} bio={member.bio} />
             </li>
           ))
@@ -124,13 +124,13 @@ const primaryCtaClasses =
       </ul>
     </section>
 
-    <section class="mx-auto max-w-6xl px-4 py-16" data-reveal>
+    <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
       <h2 class="font-heading text-3xl font-semibold text-brand-brown">Dónde estamos</h2>
       <ul class="mt-8 grid gap-6 sm:grid-cols-2">
-        <li>
+        <li data-reveal="stagger" style="--reveal-delay:0ms">
           <OfficeCard {...OFFICES.langreo} mapNote={OFFICE_MAP_NOTE} />
         </li>
-        <li>
+        <li data-reveal="stagger" style="--reveal-delay:70ms">
           <OfficeCard {...OFFICES.madrid} mapNote={OFFICE_MAP_NOTE} />
         </li>
       </ul>
@@ -145,7 +145,7 @@ const primaryCtaClasses =
       </div>
     </section>
 
-    <section class="mx-auto max-w-3xl px-4 py-16" data-reveal>
+    <section class="mx-auto max-w-3xl px-4 py-16" data-reveal="fade-up">
       <h2 class="font-heading text-3xl font-semibold text-brand-brown">Hablemos de su situación</h2>
       <p class="mt-4 text-muted">
         Cuéntenos su situación a través del formulario de contacto y le indicaremos cómo podemos ayudarle.

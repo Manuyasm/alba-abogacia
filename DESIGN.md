@@ -326,10 +326,16 @@ No debe existir desplazamiento horizontal a 320 px.
 
 ## 13. Movimiento
 
-- Transiciones breves de 150–250 ms.
-- Animaciones solo cuando expliquen estado o jerarquía.
-- Sin parallax intenso, carruseles automáticos ni entradas que oculten inicialmente contenido importante.
-- Desactivar movimiento no esencial con `prefers-reduced-motion`.
+El sistema de movimiento distingue explícitamente **dos bandas de duración**, cada una con su propio propósito y su propio rango — no existe una única duración "correcta" para todo:
+
+- **Banda interactiva (150–250 ms)**: transiciones de estado en elementos con los que la persona usuaria interactúa directamente — botones, enlaces, hover/focus de tarjetas, apertura del menú móvil, el patrón compartido `transition-interactive`. Debe sentirse inmediata, como una respuesta directa a la acción.
+- **Banda de entrada por scroll (500–650 ms)**: animaciones de aparición de secciones al entrar en el viewport (`data-reveal`, variantes `fade-up`/`fade`/`fade-left`/`fade-right`/`stagger`). Deliberadamente más lenta que la banda interactiva — es una entrada de contenido, no una respuesta a una acción del usuario, y debe leerse como un movimiento suave y controlado, nunca como un parpadeo instantáneo.
+
+Ambas bandas se verifican automáticamente mediante el escáner de guardarraíl de movimiento (`motion-guardrail.test.ts`), que aísla el bloque de CSS de entrada por scroll (marcado con comentarios `MOTION-GUARDRAIL: reveal-band-start/end` en `global.css`) del resto de la hoja de estilos antes de aplicar cada límite por separado. Cualquier duración fuera de su banda correspondiente hace fallar la prueba.
+
+- Animaciones solo cuando expliquen estado, jerarquía o la incorporación de una sección a la vista.
+- Sin parallax intenso, carruseles automáticos ni entradas que oculten inicialmente contenido importante: todo el contenido de una sección con `data-reveal` es visible por defecto sin JavaScript; el guion solo añade la animación de entrada cuando el navegador la soporta y la persona usuaria no ha solicitado movimiento reducido.
+- Desactivar movimiento no esencial con `prefers-reduced-motion`: la regla global colapsa ambas bandas a una duración casi nula, independientemente de la banda a la que pertenezca cada transición.
 
 ## 14. Objetivos de calidad
 

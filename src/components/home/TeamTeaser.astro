@@ -15,12 +15,12 @@ const TEAM = [
 ];
 ---
 
-<section class="mx-auto max-w-6xl px-4 py-16" data-reveal>
+<section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
   <h2 class="font-heading text-3xl font-semibold text-brand-brown">Quién le atiende</h2>
   <ul class="mt-8 grid gap-6 sm:grid-cols-2">
     {
-      TEAM.map((member) => (
-        <li>
+      TEAM.map((member, index) => (
+        <li data-reveal="stagger" style={`--reveal-delay:${index * 70}ms`}>
           <TeamCard name={member.name} role={member.role} />
         </li>
       ))
