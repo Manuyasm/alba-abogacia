@@ -27,4 +27,19 @@ describe("FaqAccordion", () => {
     expect(html).toContain("¿Pregunta de ejemplo dos?");
     expect(html).toContain("Respuesta de ejemplo dos.");
   });
+
+  // Design decision #6 (animations-v2, "FAQ height animation"): these hooks
+  // are consumed by `src/lib/motion/faq-animate.ts`, which only ever ADDS a
+  // smooth open/close animation on top of the native <details>/<summary>
+  // markup — the answer stays in the initial HTML either way.
+  it("exposes data-faq-item/data-faq-answer hooks without altering the native disclosure markup", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(FaqAccordion, {
+      props: { items },
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    expect(html.match(/<details[^>]*data-faq-item/g)).toHaveLength(2);
+    expect(html.match(/<p[^>]*data-faq-answer/g)).toHaveLength(2);
+  });
 });

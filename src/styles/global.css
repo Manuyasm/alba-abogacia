@@ -323,3 +323,55 @@ h6 {
     transform: translateX(3px);
   }
 }
+
+/*
+ * Header scroll-compaction (PR D, design decision #7, "Header compaction").
+ * `SiteHeader.astro`'s `<header>` is `position: sticky` and never hidden;
+ * `src/lib/motion/header-scroll.ts` only ever toggles `.is-compact` past a
+ * small scroll threshold. The header already carries a solid `bg-paper`
+ * background at all times (spec: "solid background" is satisfied
+ * unconditionally); compaction here adds a soft shadow and a mild,
+ * smoothly-transitioned padding reduction — never an abrupt jump — so the
+ * header reads as settled/compact without ever reflowing content abruptly
+ * or auto-hiding. 200ms sits inside the interactive 150-250ms bound
+ * enforced below.
+ */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  transition-property: background-color, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+
+.site-header-bar {
+  padding-block: 1rem;
+  transition-property: padding-block;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+
+.site-header.is-compact {
+  box-shadow: 0 2px 12px -4px rgb(0 0 0 / 0.08);
+}
+
+.site-header.is-compact .site-header-bar {
+  padding-block: 0.625rem;
+}
+
+/*
+ * FAQ open/close height animation (PR D, design decision #6, "FAQ height
+ * animation"). The native <details>/<summary> disclosure already shows/
+ * hides its answer instantly by default — this rule only adds a smooth
+ * `max-height` transition for when `src/lib/motion/faq-animate.ts`
+ * intercepts the `summary` click and applies inline `max-height` values.
+ * This rule never itself sets `max-height: 0` (spec: "answer must never be
+ * hidden if JS fails") — only that script's own inline styles do, and only
+ * after it has already decided to intercept the click.
+ */
+[data-faq-answer] {
+  transition-property: max-height;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
