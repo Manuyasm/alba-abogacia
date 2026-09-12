@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ContactForm } from "./ContactForm";
-import { trackContactFormResult } from "@/lib/analytics/umami";
+import { trackContactFormResult, trackEvent } from "@/lib/analytics/umami";
 
 /**
  * Component tests for the reusable ContactForm island (spec: "Form Structure and
@@ -15,6 +15,7 @@ import { trackContactFormResult } from "@/lib/analytics/umami";
 
 vi.mock("@/lib/analytics/umami", () => ({
   trackContactFormResult: vi.fn(),
+  trackEvent: vi.fn(),
 }));
 
 // The real `@cap.js/widget` package registers a `cap-widget` custom element
@@ -70,6 +71,7 @@ function fillValidVisibleFields() {
 
 beforeEach(() => {
   vi.mocked(trackContactFormResult).mockClear();
+  vi.mocked(trackEvent).mockClear();
 });
 
 afterEach(() => {
@@ -374,6 +376,27 @@ describe("ContactForm state animations (animations-v2 PR E: validation-error, va
     await waitFor(() => expect(screen.getByRole("status")).toBeInTheDocument());
 
     expect(screen.queryByText(/verificación completada/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("ContactForm contact_form_started analytics event (spec: 'analytics-events' — Confirmed Umami Event Set Only, scenario 'Started fires once per session interaction')", () => {
+  it("fires contact_form_started exactly once after the first field focus, and does not re-fire on a later field focus in the same mount", () => {
+    render(<ContactForm />);
+
+    expect(trackEvent).not.toHaveBeenCalled();
+
+    fireEvent.focus(screen.getByLabelText("Nombre"));
+    expect(trackEvent).toHaveBeenCalledTimes(1);
+    expect(trackEvent).toHaveBeenCalledWith("contact_form_started");
+
+    fireEvent.focus(screen.getByLabelText("Email"));
+    expect(trackEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not fire contact_form_started merely on render, before any user interaction", () => {
+    render(<ContactForm />);
+
+    expect(trackEvent).not.toHaveBeenCalled();
   });
 });
 

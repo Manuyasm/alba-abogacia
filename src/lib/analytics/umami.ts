@@ -35,7 +35,10 @@ export function loadAnalytics(
   return consent?.granted === true;
 }
 
-export type ContactFormEventName = "contact_form_success" | "contact_form_error";
+export type ContactFormEventName =
+  | "contact_form_started"
+  | "contact_form_success"
+  | "contact_form_error";
 
 /**
  * Click-tracking event names (design decision #8: "Umami click events" —

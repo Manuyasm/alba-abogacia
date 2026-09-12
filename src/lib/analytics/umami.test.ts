@@ -71,6 +71,16 @@ describe("trackEvent (design decision #8: generic click-tracking events)", () =>
     expect(track).toHaveBeenCalledWith("appointment_click");
   });
 
+  it("fires contact_form_started with no field-value payload (spec: 'analytics-events' — first-interaction event)", () => {
+    const track = vi.fn();
+    window.umami = { track };
+
+    trackEvent("contact_form_started");
+
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith("contact_form_started");
+  });
+
   it("does nothing when the Umami script has not loaded (no window.umami)", () => {
     delete window.umami;
 

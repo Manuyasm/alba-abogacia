@@ -9,7 +9,7 @@ import {
   type SubmitEvent,
 } from "react";
 import { ContactSchema, type ContactFormData } from "@/lib/validation/contact";
-import { trackContactFormResult } from "@/lib/analytics/umami";
+import { trackContactFormResult, trackEvent } from "@/lib/analytics/umami";
 
 /**
  * Reusable contact form island (spec: "Form Structure and Field Set", "Field
@@ -41,10 +41,14 @@ import { trackContactFormResult } from "@/lib/analytics/umami";
  * with `{ token }` — `bubbles: true, composed: true` per Cap.js's own
  * implementation — so the listener on the slot catches it regardless of
  * whether it bubbles up from the widget or (as in tests) is dispatched
- * directly on the slot. Umami events fire only after the server response
- * resolves (spec: "Post-Confirmation Umami Event Firing") — never on raw
- * submit, matching the "server-confirmed only" contract established in
- * PR2's `trackContactFormResult`.
+ * directly on the slot. Result Umami events (`contact_form_success`/
+ * `contact_form_error`) fire only after the server response resolves (spec:
+ * "Post-Confirmation Umami Event Firing") — never on raw submit, matching
+ * the "server-confirmed only" contract established in PR2's
+ * `trackContactFormResult`. The one exception is `contact_form_started`
+ * (spec: "analytics-events" — "Confirmed Umami Event Set Only"), which fires
+ * on the user's first field focus, deduped per mount via a `useRef` flag so
+ * it never re-fires for later interactions on the same form instance.
  */
 
 /**
@@ -196,6 +200,11 @@ export function ContactForm({ className }: ContactFormProps) {
   const mensajeRef = useRef<HTMLTextAreaElement>(null);
   const consentRef = useRef<HTMLInputElement>(null);
   const capSlotRef = useRef<HTMLDivElement>(null);
+  /** One-shot dedup flag for `contact_form_started` (spec: "Started fires
+   * once per session interaction") — set on the first field focus and never
+   * reset for the lifetime of this mount, so later focuses/edits (including
+   * a post-success form reset) never re-fire it. */
+  const hasStartedFormRef = useRef(false);
 
   const focusRefs: Partial<Record<FieldName, RefObject<HTMLElement | null>>> = {
     nombre: nombreRef,
@@ -219,6 +228,23 @@ export function ContactForm({ className }: ContactFormProps) {
     },
     [],
   );
+
+  /**
+   * Fires `contact_form_started` (spec: "analytics-events" — "Confirmed
+   * Umami Event Set Only") on the user's first focus into any visible
+   * ContactForm field. Guarded by `hasStartedFormRef` so subsequent focuses
+   * — on the same field or a different one — never re-fire it for this
+   * mount (spec scenario: "Started fires once per session interaction").
+   * A bare named event, same as `contact_form_success`/`contact_form_error`
+   * — no field value or other property is ever attached.
+   */
+  const handleFirstInteraction = useCallback(() => {
+    if (hasStartedFormRef.current) {
+      return;
+    }
+    hasStartedFormRef.current = true;
+    trackEvent("contact_form_started");
+  }, []);
 
   // Creates and appends the real `<cap-widget>` element imperatively
   // (client-only, post-hydration) — see the file-level doc comment for why
@@ -363,6 +389,7 @@ export function ContactForm({ className }: ContactFormProps) {
             autoComplete="name"
             value={values.nombre}
             onChange={(event) => handleChange("nombre", event.target.value)}
+            onFocus={handleFirstInteraction}
             aria-invalid={Boolean(errors.nombre)}
             aria-describedby={nombreErrorId}
             className={cx(FIELD_BASE_CLASSES, fieldStateClasses("nombre"))}
@@ -382,6 +409,7 @@ export function ContactForm({ className }: ContactFormProps) {
             autoComplete="email"
             value={values.email}
             onChange={(event) => handleChange("email", event.target.value)}
+            onFocus={handleFirstInteraction}
             aria-invalid={Boolean(errors.email)}
             aria-describedby={emailErrorId}
             className={cx(FIELD_BASE_CLASSES, fieldStateClasses("email"))}
@@ -401,6 +429,7 @@ export function ContactForm({ className }: ContactFormProps) {
             autoComplete="tel"
             value={values.telefono}
             onChange={(event) => handleChange("telefono", event.target.value)}
+            onFocus={handleFirstInteraction}
             aria-invalid={Boolean(errors.telefono)}
             aria-describedby={telefonoErrorId}
             className={cx(FIELD_BASE_CLASSES, fieldStateClasses("telefono"))}
@@ -419,6 +448,7 @@ export function ContactForm({ className }: ContactFormProps) {
             rows={5}
             value={values.mensaje}
             onChange={(event) => handleChange("mensaje", event.target.value)}
+            onFocus={handleFirstInteraction}
             aria-invalid={Boolean(errors.mensaje)}
             aria-describedby={mensajeErrorId}
             className={cx(FIELD_BASE_CLASSES, fieldStateClasses("mensaje"))}
@@ -448,6 +478,7 @@ export function ContactForm({ className }: ContactFormProps) {
             type="checkbox"
             checked={values.aceptaPrivacidad}
             onChange={(event) => handleChange("aceptaPrivacidad", event.target.checked)}
+            onFocus={handleFirstInteraction}
             aria-invalid={Boolean(errors.aceptaPrivacidad)}
             aria-describedby={consentErrorId}
             className={cx(
