@@ -104,7 +104,7 @@ describe("el-despacho.astro (page composition)", () => {
     expect(teamSection).toContain("Verónica Alba Suárez");
     expect(teamSection).toContain("Abogada");
     expect(teamSection).toContain("Aitor Domínguez López");
-    expect(teamSection).toContain("Consultor financiero");
+    expect(teamSection).toContain("Asesor financiero");
 
     // 2 <p> bio tags rendered by TeamCard's `{bio && <p>{bio}</p>}` branch —
     // confirms `bio` was actually passed and rendered, not omitted.

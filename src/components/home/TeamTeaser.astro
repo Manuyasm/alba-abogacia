@@ -3,7 +3,7 @@
 // generic role only (no bio, no photo), linking the teaser to `/el-despacho`.
 // Design: page-specific literal copy, no props (single consumer, same
 // rationale as `Hero.astro`/`ServicesSummary.astro`). Team names/roles
-// (Verónica Alba Suárez — Abogada; Aitor Domínguez López — Consultor
+// (Verónica Alba Suárez — Abogada; Aitor Domínguez López — Asesor
 // financiero) are explicitly user-authorized for this change — do not
 // re-flag or defer. No `bio`/photo prop is passed: `TeamCard` has no photo
 // prop at all today, and omitting `bio` keeps this teaser bio-free per spec.
@@ -11,7 +11,7 @@ import TeamCard from "@/components/common/TeamCard.astro";
 
 const TEAM = [
   { name: "Verónica Alba Suárez", role: "Abogada" },
-  { name: "Aitor Domínguez López", role: "Consultor financiero" },
+  { name: "Aitor Domínguez López", role: "Asesor financiero" },
 ];
 ---
 
