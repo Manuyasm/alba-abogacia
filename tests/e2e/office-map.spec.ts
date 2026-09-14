@@ -1,14 +1,14 @@
 import { expect, test } from "@playwright/test";
 
 /**
- * E2E coverage for the office-map-widget change (PR2, task 5.1): confirms
- * the shared MapLibre GL map — mounted once per page below both
- * `OfficeCard`s (spec: "Map Rendering"; design's page-mounting decision) —
- * actually hydrates and renders a real map canvas plus OpenFreeMap's
- * required attribution once its lazily-loaded (`client:visible`) section
- * scrolls into view, on both pages that render `OfficeCard`. Also confirms
- * the pre-existing "Cómo llegar" link (shipped by the archived `office-map`
- * change) is still present and unregressed by this PR's wiring.
+ * E2E coverage for the office-map-per-office redesign: confirms each
+ * `OfficeCard` now mounts its OWN small MapLibre GL map (spec: "Map
+ * Rendering"), instead of one shared map for every office. Each map
+ * hydrates and renders a real canvas plus OpenFreeMap's required
+ * attribution once its own lazily-loaded (`client:visible`) card scrolls
+ * into view, on both pages that render `OfficeCard`. Also confirms the
+ * pre-existing "Cómo llegar" link (shipped by the archived `office-map`
+ * change) is still present and unregressed by this redesign.
  */
 
 const PAGES = [
@@ -16,9 +16,11 @@ const PAGES = [
   { path: "/el-despacho", label: "el despacho page" },
 ];
 
+const OFFICE_NAMES = ["Langreo (Asturias)", "Madrid"];
+
 for (const { path, label } of PAGES) {
-  test.describe(`OfficeMap on ${label} (${path})`, () => {
-    test("renders the map canvas and OpenFreeMap attribution once scrolled into view, with no console errors", async ({
+  test.describe(`Per-office OfficeMap on ${label} (${path})`, () => {
+    test("renders one map canvas per office, each with OpenFreeMap attribution, with no console errors", async ({
       page,
     }) => {
       const consoleErrors: string[] = [];
@@ -31,21 +33,42 @@ for (const { path, label } of PAGES) {
 
       await page.goto(path);
 
-      const mapRegion = page.getByRole("region", { name: /Mapa con la ubicación de/ });
-      await mapRegion.scrollIntoViewIfNeeded();
+      for (const officeName of OFFICE_NAMES) {
+        const mapRegion = page.getByRole("region", { name: `Mapa de ubicación de ${officeName}` });
+        await mapRegion.scrollIntoViewIfNeeded();
 
-      // `client:visible` hydration + MapLibre GL's own `load` event fire
-      // asynchronously after the IntersectionObserver trips.
-      await expect(mapRegion.locator("canvas.maplibregl-canvas")).toBeVisible({ timeout: 15_000 });
+        // `client:visible` hydration + MapLibre GL's own `load` event fire
+        // asynchronously after the IntersectionObserver trips.
+        await expect(mapRegion.locator("canvas.maplibregl-canvas")).toBeVisible({ timeout: 15_000 });
+      }
 
-      const attribution = page.locator(".maplibregl-ctrl-attrib");
-      await expect(attribution).toBeVisible();
-      await expect(attribution).toContainText("OpenFreeMap");
+      const attributions = page.locator(".maplibregl-ctrl-attrib");
+      await expect(attributions).toHaveCount(OFFICE_NAMES.length);
+      for (const attribution of await attributions.all()) {
+        await expect(attribution).toBeVisible();
+        await expect(attribution).toContainText("OpenFreeMap");
+      }
 
       expect(consoleErrors, `unexpected console errors: ${consoleErrors.join("; ")}`).toHaveLength(0);
     });
 
-    test('keeps the existing "Cómo llegar" links present and unchanged alongside the map', async ({ page }) => {
+    test("each office's map is independent, with no cross-office marker leakage", async ({ page }) => {
+      await page.goto(path);
+
+      const langreoRegion = page.getByRole("region", { name: "Mapa de ubicación de Langreo (Asturias)" });
+      const madridRegion = page.getByRole("region", { name: "Mapa de ubicación de Madrid" });
+
+      await langreoRegion.scrollIntoViewIfNeeded();
+      await expect(langreoRegion.locator("canvas.maplibregl-canvas")).toBeVisible({ timeout: 15_000 });
+      await madridRegion.scrollIntoViewIfNeeded();
+      await expect(madridRegion.locator("canvas.maplibregl-canvas")).toBeVisible({ timeout: 15_000 });
+
+      // Exactly one marker per map region.
+      await expect(langreoRegion.locator(".maplibregl-marker")).toHaveCount(1);
+      await expect(madridRegion.locator(".maplibregl-marker")).toHaveCount(1);
+    });
+
+    test('keeps the existing "Cómo llegar" links present and unchanged alongside each map', async ({ page }) => {
       await page.goto(path);
 
       const langreoLink = page.getByRole("link", { name: "Cómo llegar a Langreo (Asturias)" });

@@ -7,26 +7,26 @@ import "maplibre-gl/dist/maplibre-gl.css";
 // source), assuming the worker file — and that worker's own sibling
 // "shared" chunk it imports from — ship next to the main chunk. Vite/Astro
 // never discovers or bundles that dynamic (string-URL) `new Worker(...)`
-// call, so the worker 404s in production, `map.fitBounds` (which fires only
-// after the worker-backed style/tile pipeline reaches `load`) never runs,
-// and `Marker`s render at their raw unfitted projected position instead.
-// `astro.config.mjs`'s `copyMapLibreWorkerAssets` plugin copies both files
-// verbatim into `public/vendor/maplibre-gl/` before dev/build so they exist
-// together at a stable, predictable, sibling-relative path; this points
-// MapLibre at that path explicitly instead of its broken bundled-relative
-// default.
+// call, so the worker 404s in production, and markers would render before
+// the worker-backed style/tile pipeline is ready. `astro.config.mjs`'s
+// `copyMapLibreWorkerAssets` plugin copies both files verbatim into
+// `public/vendor/maplibre-gl/` before dev/build so they exist together at a
+// stable, predictable, sibling-relative path; this points MapLibre at that
+// path explicitly instead of its broken bundled-relative default.
 setWorkerUrl("/vendor/maplibre-gl/maplibre-gl-worker.mjs");
 
 /**
- * Interactive supplementary office-location map (spec: "office-map-widget" —
- * "Map Rendering", "Tile Source Independence", "Performance", "Accessible,
- * Supplementary Presentation", "Reduced Motion Compliance", "Attribution
- * Visibility"; design: "Interactive Office Map Widget (MapLibre GL +
- * OpenFreeMap)").
+ * Interactive supplementary single-office location map (spec:
+ * "office-map-widget" — "Map Rendering", "Tile Source Independence",
+ * "Performance", "Accessible, Supplementary Presentation", "Reduced Motion
+ * Compliance", "Attribution Visibility"; design: "Interactive Office Map
+ * Widget (MapLibre GL + OpenFreeMap)").
  *
- * This PR (PR1 of the office-map-widget chain) delivers the component fully
- * unit-tested and unmounted — no `.astro` page renders it yet (PR2 wires it
- * into `index.astro`/`el-despacho.astro` and adds the privacy disclosure).
+ * office-map-per-office redesign: this component now renders exactly ONE
+ * office per instance (name + lat/lon) instead of an array of every office.
+ * `OfficeCard` mounts one instance per card, centered on that card's own
+ * office at a fixed zoom — there is nothing to `fitBounds` with a single
+ * marker, so the previous multi-office bounds-fitting logic is gone.
  *
  * Hand-vendored `maplibre-gl` wrapper (design Decision 1 — this project has
  * no shadcn/ui infra, so `mapcn`'s CLI-copy path does not apply). The `Map`
@@ -41,40 +41,42 @@ setWorkerUrl("/vendor/maplibre-gl/maplibre-gl-worker.mjs");
  * ("OpenFreeMap © OpenMapTiles Data from OpenStreetMap") renders via
  * MapLibre's own default `AttributionControl`.
  *
- * Camera behavior: `fitBounds({ animate: false })` fires on `load` for every
- * user, unconditionally (design Decision 3) — never `flyTo`/`easeTo`. The
- * `prefers-reduced-motion` read still happens (matching the
+ * Camera behavior (design Decision 3, revised for the per-office redesign):
+ * the map is constructed with a fixed `center`/`zoom` on the single office's
+ * coordinates — never `flyTo`/`easeTo`, and no `fitBounds` call at all, since
+ * there is only ever one point to show. The `prefers-reduced-motion` read
+ * still happens (matching the
  * `window.matchMedia?.("(prefers-reduced-motion: reduce)")` convention from
  * `src/lib/motion/scroll-reveal.ts`) for consistency and as a guard for any
  * future animated camera method, but since no animated method is ever
  * called, it has no branching effect today.
  *
- * Accessibility (design Decision 4, revised in PR2): the container carries
- * `role="region"` and a descriptive `aria-label` naming every office —
- * `role="img"` was PR1's original choice, but a real built E2E run (PR2)
- * caught an axe `nested-interactive` violation from it: MapLibre GL's
- * default `Marker` sets `role="button" tabindex="0"` on itself whenever a
- * popup is attached (this maplibre-gl version's own default accessibility
- * behavior — not something this component opts into), and ARIA's `img` role
- * forbids focusable descendants. `region` keeps the same required
- * accessible name while allowing that interactive content. Marker/popup
- * keyboard operability itself is still not custom-wired beyond MapLibre's
- * own default — `OfficeCard`'s "Cómo llegar" link remains the primary
- * accessible directions path (unchanged by this component).
+ * Accessibility (design Decision 4): the container carries `role="region"`
+ * and a descriptive `aria-label` naming this single office — `role="img"`
+ * was PR1's original choice, but a real built E2E run (PR2) caught an axe
+ * `nested-interactive` violation from it: MapLibre GL's default `Marker`
+ * sets `role="button" tabindex="0"` on itself whenever a popup is attached
+ * (this maplibre-gl version's own default accessibility behavior — not
+ * something this component opts into), and ARIA's `img` role forbids
+ * focusable descendants. That constraint is unchanged with a single marker,
+ * so `region` remains the correct role — it keeps the required accessible
+ * name while allowing that interactive content. Marker/popup keyboard
+ * operability itself is still not custom-wired beyond MapLibre's own
+ * default — `OfficeCard`'s "Cómo llegar" link remains the primary accessible
+ * directions path (unchanged by this component).
  */
 
 const OPENFREEMAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 
-const FIT_BOUNDS_OPTIONS = { padding: 48, maxZoom: 15, animate: false } as const;
+// Street-level zoom: close enough to be useful for a single-office map
+// embedded at card size, without needing any `fitBounds` (there is only one
+// point to show).
+const OFFICE_MAP_ZOOM = 15;
 
-export interface OfficeMapMarker {
+export interface OfficeMapProps {
   name: string;
   lat: number;
   lon: number;
-}
-
-export interface OfficeMapProps {
-  offices: OfficeMapMarker[];
   className?: string;
 }
 
@@ -82,16 +84,16 @@ function cx(...classes: Array<string | false | undefined>): string {
   return classes.filter(Boolean).join(" ");
 }
 
-function buildAriaLabel(offices: OfficeMapMarker[]): string {
-  return `Mapa con la ubicación de: ${offices.map((office) => office.name).join(", ")}`;
+function buildAriaLabel(name: string): string {
+  return `Mapa de ubicación de ${name}`;
 }
 
-export function OfficeMap({ offices, className }: OfficeMapProps) {
+export function OfficeMap({ name, lat, lon, className }: OfficeMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || offices.length === 0) {
+    if (!container) {
       return;
     }
 
@@ -101,59 +103,36 @@ export function OfficeMap({ offices, className }: OfficeMapProps) {
     // guard against any future interactive camera call.
     void window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
-    const bounds: [number, number, number, number] = offices.reduce(
-      (acc, office) => [
-        Math.min(acc[0], office.lon),
-        Math.min(acc[1], office.lat),
-        Math.max(acc[2], office.lon),
-        Math.max(acc[3], office.lat),
-      ],
-      [Infinity, Infinity, -Infinity, -Infinity] as [number, number, number, number],
-    );
-
     // The `attributionControl` option is intentionally omitted — MapLibre
     // adds its default `AttributionControl` automatically unless this key is
     // explicitly set to `false`, which this component NEVER does, so
     // OpenFreeMap's required attribution always renders (spec: "Attribution
     // Visibility"; design Decision 2).
-    //
-    // office-map-widget PR2 deviation from design Decision 3: `bounds` +
-    // `fitBoundsOptions` are passed here, at construction, instead of
-    // calling `map.fitBounds(...)` inside a `map.on("load", ...)` handler.
-    // A real built E2E run caught the bug the async version hid: `load`
-    // only fires once the Web Worker-backed style/tile pipeline finishes,
-    // so for the window before that, both markers rendered at their raw
-    // unfitted position — nearly overlapping on screen for two offices this
-    // geographically close relative to zoom 0 — which axe's `target-size`
-    // rule (WCAG 2.5.8) correctly flagged. This applies the exact same
-    // `animate:false` fit synchronously at construction instead, with no
-    // unfitted frame ever rendered.
     const map = new MapLibreMap({
       container,
       style: OPENFREEMAP_STYLE_URL,
-      bounds,
-      fitBoundsOptions: FIT_BOUNDS_OPTIONS,
+      center: [lon, lat],
+      zoom: OFFICE_MAP_ZOOM,
     });
 
-    const markers = offices.map((office) => {
-      const popup = new Popup().setText(office.name);
-      return new Marker().setLngLat([office.lon, office.lat]).setPopup(popup).addTo(map);
-    });
+    const popup = new Popup().setText(name);
+    const marker = new Marker().setLngLat([lon, lat]).setPopup(popup).addTo(map);
 
     return () => {
-      for (const marker of markers) {
-        marker.remove();
-      }
+      marker.remove();
       map.remove();
     };
-  }, [offices]);
+  }, [name, lat, lon]);
 
   return (
     <div
       ref={containerRef}
       role="region"
-      aria-label={buildAriaLabel(offices)}
-      className={cx("aspect-video w-full min-h-[320px] overflow-hidden rounded-md", className)}
+      aria-label={buildAriaLabel(name)}
+      className={cx(
+        "w-full max-w-[360px] h-[220px] overflow-hidden rounded-md",
+        className,
+      )}
     />
   );
 }

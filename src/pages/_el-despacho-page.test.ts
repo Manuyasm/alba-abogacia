@@ -2,8 +2,8 @@ import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import { getContainerRenderer } from "@astrojs/react/container-renderer";
 // Astro virtual module — only resolvable under Vite/Vitest (documented
 // Container API pattern for pages that mount a framework island). Needed
-// starting with office-map-widget PR2, since this page now mounts the
-// shared `<OfficeMap client:visible />` React island (matches
+// since this page's `OfficeCard`s each mount their own
+// `<OfficeMap client:visible />` React island (matches
 // `_index-page.test.ts`'s established pattern).
 import { loadRenderers } from "astro:container";
 import { describe, expect, it } from "vitest";
@@ -152,25 +152,20 @@ describe("el-despacho.astro (page composition)", () => {
     expect(mapNotes).toHaveLength(2);
   });
 
-  // office-map-widget PR2 (task 3.3): the shared map is mounted once, below
-  // both OfficeCards, inside the same "Dónde estamos" section — not
-  // duplicated per card (design's page-mounting decision).
-  it("mounts the shared OfficeMap below both OfficeCards, naming both offices in its accessible label", async () => {
+  // office-map-per-office redesign: each OfficeCard now carries its own
+  // small map, centered on that office only — there is no longer a single
+  // shared map mounted below both cards.
+  it("gives each OfficeCard its own OfficeMap, naming only its own office", async () => {
     const html = await renderElDespacho();
 
     const officesStart = html.indexOf("Dónde estamos");
     const faqStart = html.indexOf("Preguntas frecuentes");
     const officesSection = html.slice(officesStart, faqStart);
 
-    expect(officesSection).toMatch(/role="region"/);
-    expect(officesSection).toContain(
-      `aria-label="Mapa con la ubicación de: ${OFFICES.langreo.name}, ${OFFICES.madrid.name}"`,
-    );
-
-    // The map must come after both OfficeCards, not interleaved between them.
-    const lastCardIndex = officesSection.lastIndexOf("Atención presencial y telemática.");
-    const mapIndex = officesSection.indexOf('role="region"');
-    expect(mapIndex).toBeGreaterThan(lastCardIndex);
+    expect(officesSection.match(/role="region"/g)).toHaveLength(2);
+    expect(officesSection).toContain(`aria-label="Mapa de ubicación de ${OFFICES.langreo.name}"`);
+    expect(officesSection).toContain(`aria-label="Mapa de ubicación de ${OFFICES.madrid.name}"`);
+    expect(officesSection).not.toContain("Mapa con la ubicación de:");
   });
 
   it('still renders both unchanged "Cómo llegar" links alongside the map', async () => {
