@@ -39,6 +39,20 @@ describe("contacto.astro", () => {
     expect(html).toMatch(/<main[^>]*id="main-content"/);
   });
 
+  it("renders the approved description, production canonical URL, and remains indexable", async () => {
+    const renderers = await loadRenderers([getContainerRenderer()]);
+    const container = await AstroContainer.create({ renderers });
+    const html = await container.renderToString(ContactoPage, {
+      request: new Request("https://alba-abogacia.es/contacto"),
+    });
+
+    expect(html).toContain(
+      '<meta name="description" content="Información de contacto de ALBA Abogacía &amp; Consulting en Langreo (Asturias).">',
+    );
+    expect(html).toContain('<link rel="canonical" href="https://alba-abogacia.es/contacto">');
+    expect(html).not.toContain('<meta name="robots" content="noindex">');
+  });
+
   // animations-v2 PR E, design decision #8: click-tracking wiring.
   it("marks the phone link with the phone_click data-track hook", async () => {
     const renderers = await loadRenderers([getContainerRenderer()]);

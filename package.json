@@ -16,6 +16,7 @@
   "dependencies": {
     "@astrojs/node": "11.1.5",
     "@astrojs/react": "6.0.5",
+    "@astrojs/sitemap": "3.7.4",
     "@cap.js/widget": "0.1.57",
     "astro": "7.3.2",
     "maplibre-gl": "6.9.0",
