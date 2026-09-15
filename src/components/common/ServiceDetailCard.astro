@@ -1,9 +1,6 @@
 ---
-// Spec: "ServiceDetailCard Component" — expands a service category into a
-// detail card (title, description, scope/typical-situations bullets, a
-// descriptive CTA link). Design: sibling to `ServiceCard.astro`, not an
-// extension of it — keeps Home's minimal card single-responsibility intact.
-// Real content lives with each page's data, not in this component.
+// Detail-card content lives with each page's data. The card renders only the
+// approved title, description, and generic contact CTA.
 //
 // PR C ("Comprehensive Motion System v2"): the whole card gets the shared
 // `.service-card` hover lift/border/shadow (`global.css`,
@@ -13,21 +10,16 @@
 interface Props {
   title: string;
   description: string;
-  /** Short, generic "typical situations/documents" phrases — no pricing/SLA. */
-  scopeItems: string[];
   ctaLabel: string;
   ctaHref: string;
 }
 
-const { title, description, scopeItems, ctaLabel, ctaHref } = Astro.props;
+const { title, description, ctaLabel, ctaHref } = Astro.props;
 ---
 
 <li class="service-card flex h-full flex-col gap-3 rounded-lg border border-border bg-paper p-6">
   <h3 class="font-heading text-lg font-semibold text-ink">{title}</h3>
   <p class="text-sm text-muted">{description}</p>
-  <ul class="flex flex-col gap-1 text-sm text-muted">
-    {scopeItems.map((item) => <li>{item}</li>)}
-  </ul>
   <a
     href={ctaHref}
     class="arrow-link transition-interactive motion-reduce:transition-none mt-2 inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-brand-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
