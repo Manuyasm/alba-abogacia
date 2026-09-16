@@ -2,18 +2,19 @@ import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import { describe, expect, it } from "vitest";
 import ServiceDetailCard from "./ServiceDetailCard.astro";
 
-// Spec: "ServiceDetailCard Component" — renders title/description/scope
-// bullets/CTA from props, with a descriptive per-card CTA link (not a
-// whole-card link wrapper). Must not render pricing, fee, or SLA claims.
-// Fixture text is clearly fictional placeholder copy, not real service copy.
+// Spec: "ServiceDetailCard Component" — renders title/description/CTA from
+// props, with a descriptive per-card CTA link (not a whole-card link
+// wrapper). Must not render pricing, fee, or SLA claims. Real content
+// (including any scope/typical-situations copy) lives with each page's own
+// data, not in this component. Fixture text is clearly fictional placeholder
+// copy, not real service copy.
 describe("ServiceDetailCard", () => {
-  it("renders title, description, and all scope items as list items with only the minimum required props", async () => {
+  it("renders title and description with only the minimum required props", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(ServiceDetailCard, {
       props: {
         title: "Servicio de ejemplo",
         description: "Descripción de ejemplo para el servicio ficticio.",
-        scopeItems: ["Situación típica uno", "Situación típica dos", "Situación típica tres"],
         ctaLabel: "Consultar sobre el servicio de ejemplo",
         ctaHref: "/contacto",
       },
@@ -24,21 +25,17 @@ describe("ServiceDetailCard", () => {
     expect(html).toContain("Descripción de ejemplo para el servicio ficticio.");
     expect(html).not.toContain("undefined");
 
+    // Exactly 1 <li>: the outer card itself — no scope-item bullets.
     const liMatches = html.match(/<li[\s>]/g) ?? [];
-    // 1 outer card <li> + 3 scope-item <li>s.
-    expect(liMatches).toHaveLength(4);
-    expect(html).toContain("Situación típica uno");
-    expect(html).toContain("Situación típica dos");
-    expect(html).toContain("Situación típica tres");
+    expect(liMatches).toHaveLength(1);
   });
 
-  it("renders exactly one CTA link with the given href and label, and different scope items with a different scope count", async () => {
+  it("renders exactly one CTA link with the given href and label", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(ServiceDetailCard, {
       props: {
         title: "Otro servicio",
         description: "Otra descripción ficticia.",
-        scopeItems: ["Único caso típico"],
         ctaLabel: "Consultar sobre otro servicio",
         ctaHref: "/contacto",
       },
@@ -52,10 +49,6 @@ describe("ServiceDetailCard", () => {
     // longer closes immediately after the label text.
     expect(html).toMatch(/<a[^>]*href="\/contacto"[^>]*>[\s\S]*Consultar sobre otro servicio[\s\S]*<\/a>/);
     expect(html).toContain("arrow-link-arrow");
-
-    const liMatches = html.match(/<li[\s>]/g) ?? [];
-    // 1 outer card <li> + 1 scope-item <li> (different count than the first test).
-    expect(liMatches).toHaveLength(2);
   });
 
   // PR C: the whole card lifts/gains a red border/shadow on hover
@@ -66,7 +59,6 @@ describe("ServiceDetailCard", () => {
       props: {
         title: "Servicio de ejemplo",
         description: "Descripción de ejemplo para el servicio ficticio.",
-        scopeItems: ["Situación típica uno"],
         ctaLabel: "Consultar sobre el servicio",
         ctaHref: "/contacto",
       },
@@ -82,7 +74,6 @@ describe("ServiceDetailCard", () => {
       props: {
         title: "Servicio de ejemplo",
         description: "Descripción de ejemplo para el servicio ficticio.",
-        scopeItems: ["Situación típica uno"],
         ctaLabel: "Consultar sobre el servicio",
         ctaHref: "/contacto",
       },

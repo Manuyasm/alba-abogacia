@@ -5,107 +5,78 @@ import ProcessSteps from "@/components/common/ProcessSteps.astro";
 import FaqAccordion from "@/components/common/FaqAccordion.astro";
 import { SITE_NAME } from "@/lib/site-facts";
 
-// Spec: "Page Existence", "Service Taxonomy Consistency", "Two-Section
-// Structure", "ServiceDetailCard Component", "ProcessSteps Promotion",
-// "Servicios FAQ", "Closing CTA", "Content Integrity", "Accessibility and
-// Navigation State". Design: flat static page, two always-visible sections
-// (Jurídico/Financiero) built on `ServiceDetailCard`, the promoted
-// `ProcessSteps`, a page-local `FaqAccordion`, and a closing CTA to
-// `/contacto`. All copy below is literal and structural-facts-only (no
-// pricing/SLA/colegiada/testimonials) — matches the design's Content Audit
-// Table verbatim. The 6 category titles exactly match
-// `ServicesSummary.astro`'s Home taxonomy (Service Taxonomy Consistency).
 const SERVICIOS_DESCRIPTION =
-  "Servicios jurídicos y de consultoría financiera en Langreo (Asturias) y Madrid: derecho de familia, herencias, laboral, Seguridad Social, contratos y consultoría financiera.";
+  "Servicios de asesoría legal y consultoría financiera.";
 
 interface ServiceDetail {
   title: string;
   description: string;
-  scopeItems: string[];
   ctaLabel: string;
   ctaHref: string;
 }
 
 const JURIDICO: ServiceDetail[] = [
   {
-    title: "Derecho de familia",
-    description:
-      "Le acompañamos en separaciones, divorcios, custodia y medidas relativas a los hijos, buscando siempre reducir el conflicto y proteger el interés de la familia. También atendemos procesos de mediación familiar cuando las partes buscan un acuerdo.",
-    scopeItems: [
-      "Separaciones y divorcios, de mutuo acuerdo o contenciosos",
-      "Custodia, régimen de visitas y pensión de alimentos",
-      "Mediación familiar para alcanzar acuerdos",
-    ],
-    ctaLabel: "Consultar sobre derecho de familia",
+    title: "Litigios y Disputas",
+    description: "Representación en tribunales y resolución de conflictos para proteger sus intereses.",
+    ctaLabel: "Solicitar consulta",
     ctaHref: "/contacto",
   },
   {
-    title: "Herencias y sucesiones",
-    description:
-      "Le orientamos en la aceptación, partición y reparto de herencias, así como en los trámites notariales y fiscales que conlleva un proceso sucesorio. Resolvemos sus dudas sobre testamentos y sobre qué documentación necesitará en cada fase.",
-    scopeItems: [
-      "Aceptación y renuncia de herencia",
-      "Partición y reparto entre herederos",
-      "Testamentos y trámites notariales",
-    ],
-    ctaLabel: "Consultar sobre herencias y sucesiones",
+    title: "Derecho Corporativo",
+    description: "Asesoramiento en la formación, gobernanza y operación de empresas para asegurar el cumplimiento y la eficiencia.",
+    ctaLabel: "Solicitar consulta",
     ctaHref: "/contacto",
   },
   {
-    title: "Derecho laboral",
-    description:
-      "Defendemos sus derechos como trabajador ante despidos, modificaciones de condiciones o incumplimientos de la empresa, y le asesoramos en la revisión de contratos laborales. Le explicamos las opciones disponibles antes de iniciar cualquier reclamación.",
-    scopeItems: [
-      "Despidos y reclamaciones frente a la empresa",
-      "Revisión y negociación de contratos laborales",
-      "Modificaciones de condiciones de trabajo",
-    ],
-    ctaLabel: "Consultar sobre derecho laboral",
+    title: "Derecho de familia y menores",
+    description: "Orientación en procesos de conflicto familiar, menores, régimen económico del matrimonio.",
+    ctaLabel: "Solicitar consulta",
     ctaHref: "/contacto",
   },
   {
-    title: "Seguridad Social",
-    description:
-      "Le ayudamos a gestionar incapacidades, pensiones y prestaciones ante los organismos de la Seguridad Social, incluyendo los recursos frente a resoluciones desfavorables. Le indicamos qué documentación aportar según su situación.",
-    scopeItems: [
-      "Incapacidad permanente y temporal",
-      "Pensiones y prestaciones",
-      "Recursos ante resoluciones denegatorias",
-    ],
-    ctaLabel: "Consultar sobre Seguridad Social",
+    title: "Derecho Laboral",
+    description: "Asistencia en asuntos laborales, incluyendo negociaciones contractuales y resolución de disputas laborales.",
+    ctaLabel: "Solicitar consulta",
+    ctaHref: "/contacto",
+  },
+  {
+    title: "Derecho hereditario",
+    description: "Tramitación completa de herencias, incluyendo impuestos y actos notariales.",
+    ctaLabel: "Solicitar consulta",
     ctaHref: "/contacto",
   },
 ];
 
-// Financiero card 1 scope item 3: reworded from the design's draft
-// ("negociación de condiciones y garantías") to "Negociación de condiciones
-// contractuales" — the shared forbidden-pattern regex (`/garant[ií]a/i`)
-// targets results/outcome guarantee claims, and this reword removes any
-// ambiguity while keeping the contract-law meaning intact (design's mandatory
-// reword, applied before the content-integrity test below).
 const FINANCIERO: ServiceDetail[] = [
   {
-    title: "Contratos y reclamaciones",
-    description:
-      "Redactamos, revisamos y gestionamos reclamaciones sobre contratos civiles y mercantiles, aportando seguridad jurídica a sus acuerdos y operaciones. Le ayudamos a identificar riesgos antes de firmar y a reclamar cuando un contrato no se cumple.",
-    scopeItems: [
-      "Redacción y revisión de contratos civiles y mercantiles",
-      "Reclamaciones por incumplimiento contractual",
-      "Negociación de condiciones contractuales",
-    ],
-    ctaLabel: "Consultar sobre contratos y reclamaciones",
+    title: "Planificación financiera",
+    description: "Desarrollo de estrategias financieras a corto y largo plazo para asegurar la estabilidad y el crecimiento.",
+    ctaLabel: "Solicitar consulta",
     ctaHref: "/contacto",
   },
   {
-    title: "Consultoría financiera",
-    description:
-      "Ofrecemos planificación y asesoramiento financiero a particulares y empresas, con criterios sólidos adaptados a cada situación. Le ayudamos a organizar su información financiera antes de tomar decisiones importantes.",
-    scopeItems: [
-      "Planificación financiera personal y empresarial",
-      "Análisis de situación patrimonial",
-      "Asesoramiento previo a decisiones financieras",
-    ],
-    ctaLabel: "Consultar sobre consultoría financiera",
+    title: "Gestión de Riesgos",
+    description: "Identificación y mitigación de riesgos financieros para proteger su patrimonio.",
+    ctaLabel: "Solicitar consulta",
+    ctaHref: "/contacto",
+  },
+  {
+    title: "Asesoría en Inversiones",
+    description: "Orientación en la selección y gestión de inversiones para maximizar rendimientos.",
+    ctaLabel: "Solicitar consulta",
+    ctaHref: "/contacto",
+  },
+  {
+    title: "Reestructuración Financiera",
+    description: "Asistencia en la reorganización de estructuras financieras para mejorar la eficiencia y la rentabilidad.",
+    ctaLabel: "Solicitar consulta",
+    ctaHref: "/contacto",
+  },
+  {
+    title: "Análisis de Viabilidad de Proyectos",
+    description: "Evaluación de proyectos de inversión para asegurar su viabilidad y rentabilidad.",
+    ctaLabel: "Solicitar consulta",
     ctaHref: "/contacto",
   },
 ];
@@ -149,7 +120,7 @@ const jumpLinkClasses =
 ---
 
 <BaseLayout title={`Servicios | ${SITE_NAME}`} description={SERVICIOS_DESCRIPTION}>
-  <main id="main-content">
+  <main id="main-content" class="overflow-x-hidden">
     <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
       <h1 class="font-heading text-4xl font-semibold text-brand-brown sm:text-5xl">
         Servicios jurídicos y de consultoría financiera
@@ -159,20 +130,22 @@ const jumpLinkClasses =
         acompañarle en cada etapa de su situación, ya sea personal o empresarial.
       </p>
       <div class="mt-8 flex flex-wrap gap-4">
-        <a href="#area-juridica" class={jumpLinkClasses}>Área jurídica</a>
-        <a href="#area-financiera" class={jumpLinkClasses}>Área financiera</a>
+        <a href="#area-juridica" class={jumpLinkClasses}>Asesoría legal</a>
+        <a href="#area-financiera" class={jumpLinkClasses}>Consultoría financiera</a>
       </div>
     </section>
 
     <section id="area-juridica" class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-left">
-      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Área jurídica</h2>
+      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Asesoría legal</h2>
+      <p class="mt-4 max-w-2xl text-muted">
+        Nuestro equipo de abogados expertos está dedicado a proporcionar soluciones legales efectivas y personalizadas para una variedad de necesidades.
+      </p>
       <ul class="mt-8 grid gap-6 sm:grid-cols-2">
         {
           JURIDICO.map((service) => (
             <ServiceDetailCard
               title={service.title}
               description={service.description}
-              scopeItems={service.scopeItems}
               ctaLabel={service.ctaLabel}
               ctaHref={service.ctaHref}
             />
@@ -182,14 +155,16 @@ const jumpLinkClasses =
     </section>
 
     <section id="area-financiera" class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-right">
-      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Área financiera</h2>
+      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Consultoría financiera</h2>
+      <p class="mt-4 max-w-2xl text-muted">
+        Ofrecemos servicios de consultoría financiera para ayudarle a gestionar sus recursos de manera eficiente y alcanzar sus objetivos financieros.
+      </p>
       <ul class="mt-8 grid gap-6 sm:grid-cols-2">
         {
           FINANCIERO.map((service) => (
             <ServiceDetailCard
               title={service.title}
               description={service.description}
-              scopeItems={service.scopeItems}
               ctaLabel={service.ctaLabel}
               ctaHref={service.ctaHref}
             />

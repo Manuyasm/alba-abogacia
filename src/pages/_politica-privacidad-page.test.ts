@@ -17,6 +17,12 @@ describe("politica-privacidad.astro (third-party services disclosure)", () => {
     });
   }
 
+  it("renders a noindex directive in its initial HTML while remaining accessible", async () => {
+    const html = await renderPage();
+
+    expect(html).toContain('<meta name="robots" content="noindex">');
+  });
+
   it("adds a numbered '7. Servicios de terceros' section after the existing 6 sections", async () => {
     const html = await renderPage();
 

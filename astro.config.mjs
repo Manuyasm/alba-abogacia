@@ -1,6 +1,7 @@
 import { defineConfig } from "astro/config";
 import node from "@astrojs/node";
 import react from "@astrojs/react";
+import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import { existsSync, copyFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -45,11 +46,21 @@ function copyMapLibreWorkerAssets() {
 // (e.g. `src/pages/api/contacto.ts`, which sets `export const prerender = false`)
 // are rendered on demand by the Node adapter. See DESIGN.md §1 and AGENTS.md §3/§8.
 export default defineConfig({
+  site: "https://alba-abogacia.es",
   output: "static",
   adapter: node({
     mode: "standalone",
   }),
-  integrations: [react()],
+  integrations: [
+    react(),
+    sitemap({
+      serialize(item) {
+        return new URL(item.url).pathname.replace(/\/$/, "") === "/politica-privacidad"
+          ? undefined
+          : item;
+      },
+    }),
+  ],
   vite: {
     plugins: [tailwindcss(), copyMapLibreWorkerAssets()],
   },

@@ -18,6 +18,17 @@ describe("BaseLayout", () => {
     expect(html).toMatch(/<meta name="description" content="Despacho de abogacía[^"]*"/);
     expect(html).toMatch(/<link rel="canonical" href="https:\/\/alba-abogacia\.es\/"\s*\/?>/);
     expect(html).not.toContain('property="og:image"');
+    expect(html).not.toContain('<meta name="robots" content="noindex">');
+  });
+
+  it("emits a server-rendered noindex directive only when requested", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(BaseLayout, {
+      props: { title: "Borrador", noindex: true },
+      request: new Request("https://alba-abogacia.es/borrador"),
+    });
+
+    expect(html.match(/<meta name="robots" content="noindex">/g)).toHaveLength(1);
   });
 
   it("lets a page override description, canonicalUrl and ogImage", async () => {

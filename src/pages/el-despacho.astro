@@ -3,7 +3,6 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 import TeamCard from "@/components/common/TeamCard.astro";
 import OfficeCard from "@/components/common/OfficeCard.astro";
 import FaqAccordion from "@/components/common/FaqAccordion.astro";
-import { OfficeMap } from "@/components/common/OfficeMap";
 import { OFFICES, SITE_NAME } from "@/lib/site-facts";
 
 // Spec: "Page Existence", "Philosophy/Intro Section", "Team Profiles",
@@ -20,18 +19,64 @@ import { OFFICES, SITE_NAME } from "@/lib/site-facts";
 const EL_DESPACHO_DESCRIPTION =
   "Conozca al equipo de Alba Abogacía & Consulting y nuestras oficinas en Langreo (Asturias) y Madrid: asesoramiento jurídico y consultoría financiera con trato cercano.";
 
+// Intro (§1): 3 paragraphs of client-confirmed "Sobre nosotros" copy —
+// mission/approach, trust principles, and strategic-partner positioning —
+// verbatim from the client-provided page content. Replaces the previous
+// single generic paragraph; the 4 "Quiénes somos" principles below
+// (Claridad/Confianza/Cercanía/Privacidad) are unrelated and unchanged.
+const INTRO_PARAGRAPHS = [
+  "En ALBA Abogacía & Consulting, estamos comprometidos con la excelencia en la prestación de servicios de asesoramiento integral y la implementación de soluciones estratégicas tanto en el ámbito legal como en el financiero. Nuestro equipo de profesionales altamente cualificados se dedica a comprender a fondo las necesidades y objetivos de cada uno de nuestros clientes, proporcionando un enfoque personalizado que garantiza resultados óptimos.",
+  "Creemos firmemente en la importancia de establecer y mantener relaciones sólidas y duraderas con nuestros clientes. Estas relaciones se basan en principios fundamentales que guían nuestra práctica diaria: confianza, transparencia y profesionalismo. La confianza es esencial para nosotros, y nos esforzamos por ganarla y mantenerla a través de una comunicación abierta y honesta. La transparencia es clave en todas nuestras interacciones, asegurando que nuestros clientes estén siempre bien informados y comprendan cada paso del proceso. Finalmente, la excelencia profesional es nuestro estándar, y nos esforzamos continuamente por superar las expectativas a través de un servicio meticuloso y una atención al detalle inigualable.",
+  "Nuestra misión es ser más que simples asesores; aspiramos a ser socios estratégicos para nuestros clientes, apoyándolos en cada etapa de su crecimiento y desarrollo. Con un enfoque centrado en el cliente, trabajamos incansablemente para ofrecer soluciones que no solo resuelvan problemas inmediatos, sino que también promuevan el éxito a largo plazo. En ALBA Abogacía & Consulting, su éxito es nuestro compromiso, y estamos aquí para acompañarlo en cada paso del camino hacia un futuro más seguro y próspero.",
+];
+
+// History (§1b, new section): client-confirmed founding-age claim ("hace más
+// de una década") — approximate by design, not a fabricated exact date.
+const HISTORY_TEXT =
+  "Fundada hace más de una década, ALBA Abogacía & Consulting nació con el objetivo de llenar un vacío en el mercado: ofrecer una combinación de servicios legales y financieros bajo un mismo techo. Desde nuestros inicios, hemos crecido y evolucionado, adaptándonos a las cambiantes necesidades de nuestros clientes y del mercado. Hoy, somos reconocidos por nuestra capacidad para manejar casos complejos y proporcionar soluciones innovadoras.";
+
 // Team (§2): names/roles verbatim-identical to `TeamTeaser.astro`'s `TEAM`
 // array (Service/Team Taxonomy Consistency) — `bio` is new to this page.
+const TEAM_INTRO =
+  "En ALBA Abogacía & Consulting, contamos con un equipo multidisciplinario que combina conocimientos jurídicos y financieros para ofrecer un servicio integral.";
+
 const TEAM = [
   {
     name: "Verónica Alba Suárez",
     role: "Abogada",
-    bio: "Atiende los asuntos jurídicos del despacho, acompañando a cada persona con explicaciones claras sobre su situación y los pasos disponibles.",
+    bio: "La dirección del bufete jurídico corresponde a la Abogada Verónica Alba Suárez, con casi 20 años de experiencia profesional en litigios y solución extrajudicial de asuntos. Se especializa en derecho familiar y de menores, asuntos hereditarios y sus impuestos, derecho laboral y de Seguridad Social, contratos comerciales y gestión extrajudicial de conflictos. Su enfoque detallado y estratégico, desde la perspectiva de la prevención y sostenibilidad en el tiempo, garantizan que cada caso se maneje con la máxima profesionalidad y rigor.",
   },
   {
     name: "Aitor Domínguez López",
-    role: "Consultor financiero",
-    bio: "Se ocupa de la consultoría financiera del despacho, ayudando a particulares y empresas a organizar su situación económica antes de tomar decisiones importantes. Trabaja de forma coordinada con el área jurídica cuando un mismo asunto lo requiere.",
+    role: "Asesor financiero",
+    bio: "La consultoría financiera viene de la mano de Aitor Domínguez López, asesor financiero con más de 10 años de experiencia en planificación financiera y gestión de riesgos. Ha ayudado a numerosos particulares y empresas a optimizar sus recursos y alcanzar sus objetivos financieros, desde la planificación y la constancia. Su capacidad para analizar y prever las tendencias económicas, lo convierte en un valioso recurso para nuestros clientes.",
+  },
+];
+
+// Values (§2b, new section): 4 client-confirmed company values, distinct
+// from the already-shipped 4 "Quiénes somos" principles above
+// (Claridad/Confianza/Cercanía/Privacidad) — those describe how clients are
+// treated, these describe internal operating values.
+const VALUES = [
+  {
+    name: "Integridad",
+    description:
+      "Creemos en la importancia de actuar con honestidad y transparencia en todo momento. La confianza es esencial en nuestra relación con los clientes, y nos esforzamos por mantenerla mediante una comunicación clara y sincera, cumpliendo siempre con nuestras promesas y compromisos.",
+  },
+  {
+    name: "Profesionalismo",
+    description:
+      "Nuestro equipo está compuesto por expertos altamente calificados y con vasta experiencia en sus respectivos campos. Mantenemos altos estándares de calidad en todos nuestros servicios, asegurándonos de que cada caso se maneje con la máxima competencia y atención al detalle.",
+  },
+  {
+    name: "Compromiso",
+    description:
+      "Estamos completamente dedicados al éxito de nuestros clientes. Nos tomamos el tiempo necesario para entender sus necesidades y objetivos, y trabajamos incansablemente para ofrecer soluciones que superen sus expectativas.",
+  },
+  {
+    name: "Innovación",
+    description:
+      "Buscamos mejorar nuestros procesos y servicios, utilizando metodologías avanzadas para ofrecer resultados más eficientes y efectivos. La innovación nos permite adelantarnos a los desafíos y ofrecer soluciones proactivas a nuestros clientes.",
   },
 ];
 
@@ -39,15 +84,6 @@ const TEAM = [
 // `mapNote` text on both cards by construction — no "sede principal"/"sede
 // corporativa" hierarchy framing between Langreo and Madrid.
 const OFFICE_MAP_NOTE = "Atención presencial y telemática.";
-
-// office-map-widget PR2 (task 3.3): one shared map for both offices, mounted
-// below both `OfficeCard`s (design's page-mounting decision — not one map
-// per card). Projected to `OfficeMapMarker`'s exact shape.
-const OFFICE_MAP_MARKERS = [OFFICES.langreo, OFFICES.madrid].map(({ name, lat, lon }) => ({
-  name,
-  lat,
-  lon,
-}));
 
 // FAQ (§4): fresh, el-despacho-specific structural facts only (how the two
 // professionals coordinate, remote/telemático availability, and a pointer to
@@ -86,11 +122,9 @@ const primaryCtaClasses =
   <main id="main-content">
     <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
       <h1 class="font-heading text-4xl font-semibold text-brand-brown sm:text-5xl">Quiénes somos</h1>
-      <p class="mt-4 max-w-2xl text-lg text-muted">
-        Alba Abogacía &amp; Consulting es un despacho que combina asesoramiento jurídico y consultoría
-        financiera, con oficinas en Langreo (Asturias) y Madrid. Trabajamos para que cada persona entienda su
-        situación con claridad y sepa en cada momento cuáles son los siguientes pasos.
-      </p>
+      <div class="mt-4 max-w-2xl space-y-4 text-lg text-muted">
+        {INTRO_PARAGRAPHS.map((paragraph) => <p>{paragraph}</p>)}
+      </div>
       <ul class="mt-8 grid gap-6 sm:grid-cols-2">
         <li>
           <p class="font-heading text-lg font-semibold text-ink">Claridad</p>
@@ -122,12 +156,32 @@ const primaryCtaClasses =
     </section>
 
     <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
+      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Nuestra historia</h2>
+      <p class="mt-4 max-w-2xl text-lg text-muted">{HISTORY_TEXT}</p>
+    </section>
+
+    <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
       <h2 class="font-heading text-3xl font-semibold text-brand-brown">El equipo</h2>
+      <p class="mt-4 max-w-2xl text-lg text-muted">{TEAM_INTRO}</p>
       <ul class="mt-8 grid gap-6 sm:grid-cols-2">
         {
           TEAM.map((member, index) => (
             <li data-reveal="stagger" style={`--reveal-delay:${index * 70}ms`}>
               <TeamCard name={member.name} role={member.role} bio={member.bio} />
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
+      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Nuestros Valores</h2>
+      <ul class="mt-8 grid gap-6 sm:grid-cols-2">
+        {
+          VALUES.map((value, index) => (
+            <li data-reveal="stagger" style={`--reveal-delay:${index * 70}ms`}>
+              <p class="font-heading text-lg font-semibold text-ink">{value.name}</p>
+              <p class="mt-2 text-sm text-muted">{value.description}</p>
             </li>
           ))
         }
@@ -144,9 +198,6 @@ const primaryCtaClasses =
           <OfficeCard {...OFFICES.madrid} mapNote={OFFICE_MAP_NOTE} />
         </li>
       </ul>
-      <div class="mt-8">
-        <OfficeMap client:visible offices={OFFICE_MAP_MARKERS} />
-      </div>
     </section>
 
     <section class="mx-auto max-w-3xl px-4 py-16">

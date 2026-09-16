@@ -5,7 +5,7 @@ import TeamTeaser from "./TeamTeaser.astro";
 // Spec: "Team Teaser" — a `TeamCard` per confirmed team member with name and
 // generic role only (no bio, no photo), linking the teaser to `/el-despacho`.
 // Team names/roles (Verónica Alba Suárez — Abogada; Aitor Domínguez López —
-// Consultor financiero) are explicitly user-authorized for this change.
+// Asesor financiero) are explicitly user-authorized for this change.
 describe("TeamTeaser", () => {
   it("renders exactly one h2 heading", async () => {
     const container = await AstroContainer.create();
@@ -30,7 +30,7 @@ describe("TeamTeaser", () => {
     expect(html).toContain("Verónica Alba Suárez");
     expect(html).toContain("Abogada");
     expect(html).toContain("Aitor Domínguez López");
-    expect(html).toContain("Consultor financiero");
+    expect(html).toContain("Asesor financiero");
   });
 
   it("renders no bio text and no images for either card", async () => {

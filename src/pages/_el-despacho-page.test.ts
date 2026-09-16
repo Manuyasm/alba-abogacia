@@ -2,8 +2,8 @@ import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import { getContainerRenderer } from "@astrojs/react/container-renderer";
 // Astro virtual module — only resolvable under Vite/Vitest (documented
 // Container API pattern for pages that mount a framework island). Needed
-// starting with office-map-widget PR2, since this page now mounts the
-// shared `<OfficeMap client:visible />` React island (matches
+// since this page's `OfficeCard`s each mount their own
+// `<OfficeMap client:visible />` React island (matches
 // `_index-page.test.ts`'s established pattern).
 import { loadRenderers } from "astro:container";
 import { describe, expect, it } from "vitest";
@@ -40,28 +40,62 @@ describe("el-despacho.astro (page composition)", () => {
     expect(html.match(/<h1[ >]/g)).toHaveLength(1);
   });
 
-  it("renders sections in order: Intro, Equipo, Oficinas, FAQ, CTA", async () => {
+  it("renders sections in order: Intro, Historia, Equipo, Valores, Oficinas, FAQ, CTA", async () => {
     const html = await renderElDespacho();
 
     const introIndex = html.indexOf("Quiénes somos");
+    const historyIndex = html.indexOf("Nuestra historia");
     const teamIndex = html.indexOf("El equipo");
+    const valuesIndex = html.indexOf("Nuestros Valores");
     const officesIndex = html.indexOf("Dónde estamos");
     const faqIndex = html.indexOf("Preguntas frecuentes");
     const ctaIndex = html.indexOf("Hablemos de su situación");
 
     expect(introIndex).toBeGreaterThan(-1);
-    expect(teamIndex).toBeGreaterThan(introIndex);
-    expect(officesIndex).toBeGreaterThan(teamIndex);
+    expect(historyIndex).toBeGreaterThan(introIndex);
+    expect(teamIndex).toBeGreaterThan(historyIndex);
+    expect(valuesIndex).toBeGreaterThan(teamIndex);
+    expect(officesIndex).toBeGreaterThan(valuesIndex);
     expect(faqIndex).toBeGreaterThan(officesIndex);
     expect(ctaIndex).toBeGreaterThan(faqIndex);
   });
 
-  it("renders exactly one <h2> per major section (Equipo, Oficinas, FAQ, CTA)", async () => {
+  it("renders exactly one <h2> per major section (Historia, Equipo, Valores, Oficinas, FAQ, CTA)", async () => {
     const html = await renderElDespacho();
 
-    // 4 major sections beyond the intro's <h1>: El equipo, Dónde estamos,
-    // Preguntas frecuentes, Hablemos de su situación.
-    expect(html.match(/<h2[ >]/g)).toHaveLength(4);
+    // 6 major sections beyond the intro's <h1>: Nuestra historia, El equipo,
+    // Nuestros Valores, Dónde estamos, Preguntas frecuentes, Hablemos de su
+    // situación.
+    expect(html.match(/<h2[ >]/g)).toHaveLength(6);
+  });
+
+  it("renders the 3 confirmed intro paragraphs and the confirmed history text", async () => {
+    const html = await renderElDespacho();
+
+    const introStart = html.indexOf("Quiénes somos");
+    const historyStart = html.indexOf("Nuestra historia");
+    const teamStart = html.indexOf("El equipo");
+
+    const introSection = html.slice(introStart, historyStart);
+    expect(introSection).toContain("estamos comprometidos con la excelencia");
+    expect(introSection).toContain("confianza, transparencia y profesionalismo");
+    expect(introSection).toContain("aspiramos a ser socios estratégicos");
+
+    const historySection = html.slice(historyStart, teamStart);
+    expect(historySection).toContain("Fundada hace más de una década");
+  });
+
+  it("renders the 4 company values (Integridad, Profesionalismo, Compromiso, Innovación)", async () => {
+    const html = await renderElDespacho();
+
+    const valuesStart = html.indexOf("Nuestros Valores");
+    const officesStart = html.indexOf("Dónde estamos");
+    const valuesSection = html.slice(valuesStart, officesStart);
+
+    expect(valuesSection).toContain("Integridad");
+    expect(valuesSection).toContain("Profesionalismo");
+    expect(valuesSection).toContain("Compromiso");
+    expect(valuesSection).toContain("Innovación");
   });
 
   it("keeps heading levels in strict hierarchical order with no skipped level", async () => {
@@ -104,7 +138,7 @@ describe("el-despacho.astro (page composition)", () => {
     expect(teamSection).toContain("Verónica Alba Suárez");
     expect(teamSection).toContain("Abogada");
     expect(teamSection).toContain("Aitor Domínguez López");
-    expect(teamSection).toContain("Consultor financiero");
+    expect(teamSection).toContain("Asesor financiero");
 
     // 2 <p> bio tags rendered by TeamCard's `{bio && <p>{bio}</p>}` branch —
     // confirms `bio` was actually passed and rendered, not omitted.
@@ -152,25 +186,20 @@ describe("el-despacho.astro (page composition)", () => {
     expect(mapNotes).toHaveLength(2);
   });
 
-  // office-map-widget PR2 (task 3.3): the shared map is mounted once, below
-  // both OfficeCards, inside the same "Dónde estamos" section — not
-  // duplicated per card (design's page-mounting decision).
-  it("mounts the shared OfficeMap below both OfficeCards, naming both offices in its accessible label", async () => {
+  // office-map-per-office redesign: each OfficeCard now carries its own
+  // small map, centered on that office only — there is no longer a single
+  // shared map mounted below both cards.
+  it("gives each OfficeCard its own OfficeMap, naming only its own office", async () => {
     const html = await renderElDespacho();
 
     const officesStart = html.indexOf("Dónde estamos");
     const faqStart = html.indexOf("Preguntas frecuentes");
     const officesSection = html.slice(officesStart, faqStart);
 
-    expect(officesSection).toMatch(/role="region"/);
-    expect(officesSection).toContain(
-      `aria-label="Mapa con la ubicación de: ${OFFICES.langreo.name}, ${OFFICES.madrid.name}"`,
-    );
-
-    // The map must come after both OfficeCards, not interleaved between them.
-    const lastCardIndex = officesSection.lastIndexOf("Atención presencial y telemática.");
-    const mapIndex = officesSection.indexOf('role="region"');
-    expect(mapIndex).toBeGreaterThan(lastCardIndex);
+    expect(officesSection.match(/role="region"/g)).toHaveLength(2);
+    expect(officesSection).toContain(`aria-label="Mapa de ubicación de ${OFFICES.langreo.name}"`);
+    expect(officesSection).toContain(`aria-label="Mapa de ubicación de ${OFFICES.madrid.name}"`);
+    expect(officesSection).not.toContain("Mapa con la ubicación de:");
   });
 
   it('still renders both unchanged "Cómo llegar" links alongside the map', async () => {

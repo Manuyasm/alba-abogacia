@@ -2,8 +2,8 @@ import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import { getContainerRenderer } from "@astrojs/react/container-renderer";
 // Astro virtual module — only resolvable under Vite/Vitest (documented
 // Container API pattern for pages that mount a framework island). Needed
-// starting with office-map-widget PR2, since this page now mounts the
-// shared `<OfficeMap client:visible />` React island.
+// since this page's `OfficeCard`s each mount their own
+// `<OfficeMap client:visible />` React island.
 import { loadRenderers } from "astro:container";
 import { describe, expect, it } from "vitest";
 import ElDespachoPage from "./el-despacho.astro";
@@ -17,6 +17,15 @@ import ElDespachoPage from "./el-despacho.astro";
 // formación-continua phrasing) — mirrors the discipline of
 // `_servicios-content-integrity.test.ts`, expanded per design's forbidden-
 // pattern scan table.
+//
+// Scoping note (2026-09-12): the client later confirmed real years-of-
+// experience figures for the team bios — "casi 20 años" (Verónica) and "más
+// de 10 años" (Aitor) — superseding the blanket ban for these two exact,
+// client-authorized figures only. The guard below strips exactly those two
+// confirmed phrases before scanning, so it still fails on ANY other/new
+// years-of-experience claim (fabricated or otherwise unconfirmed).
+const CONFIRMED_EXPERIENCE_CLAIMS = ["casi 20 años", "más de 10 años"];
+
 describe("el-despacho.astro (content integrity — no fabricated claims)", () => {
   it("contains none of the forbidden claim patterns anywhere in the full page", async () => {
     const renderers = await loadRenderers([getContainerRenderer()]);
@@ -25,8 +34,13 @@ describe("el-despacho.astro (content integrity — no fabricated claims)", () =>
       request: new Request("https://alba-abogacia.es/el-despacho"),
     });
 
-    // 1. Years-of-experience figure (e.g. "20 años de experiencia", "+10 años").
-    expect(html).not.toMatch(/\+?\d{1,2}\s*años/i);
+    // 1. Years-of-experience figure (e.g. "20 años de experiencia", "+10 años"),
+    // except the two client-confirmed figures above.
+    const htmlWithoutConfirmedExperienceClaims = CONFIRMED_EXPERIENCE_CLAIMS.reduce(
+      (acc, phrase) => acc.replaceAll(phrase, ""),
+      html,
+    );
+    expect(htmlWithoutConfirmedExperienceClaims).not.toMatch(/\+?\d{1,2}\s*años/i);
 
     // 2. All 3 known-fabricated colegiada numbers, literal strings.
     expect(html).not.toContain("5812");
