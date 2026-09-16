@@ -58,6 +58,11 @@ const organizationJsonLd = {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <!-- Cropped from the real client logo's icon mark (src/assets/brand/logo.png)
+         — the wordmark below it is illegible at favicon size, so only the
+         symbol is used here. -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="canonical" href={canonicalUrl} />
     {noindex && <meta name="robots" content="noindex" />}
     <meta property="og:title" content={title} />
