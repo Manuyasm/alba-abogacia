@@ -3,14 +3,24 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 import { PRIMARY_EMAIL } from "@/lib/site-facts";
 
 // RGPD (UE) 2016/679 / LOPDGDD 3/2018 — borrador pendiente de revisión legal
-// final y de confirmación del cliente antes de publicación (spec: la casilla
-// de consentimiento del formulario de contacto enlaza a esta página; PR4
-// scope note). Los marcadores de posición siguientes NO deben sustituirse
-// por datos inventados: deben confirmarse con el cliente/asesoría legal.
-// Ambos siguen siendo locales a esta página: son específicos del borrador
+// final antes de publicación (spec: la casilla de consentimiento del
+// formulario de contacto enlaza a esta página; PR4 scope note). Ambos
+// valores siguen siendo locales a esta página: son específicos del borrador
 // legal, no hechos de todo el sitio como los de `site-facts.ts`.
-const DATA_CONTROLLER_LEGAL_NAME = "{{DATA_CONTROLLER_LEGAL_NAME}}";
-const RETENTION_PERIOD = "{{RETENTION_PERIOD}}";
+//
+// Client-confirmed: el responsable del tratamiento figura como persona
+// física (autónoma), no como sociedad.
+const DATA_CONTROLLER_LEGAL_NAME = "Verónica Alba Suárez";
+// Sin una cifra única confirmada por el cliente/asesoría legal: se usa la
+// formulación general del RGPD (finalidad + plazos de prescripción
+// legalmente aplicables) en lugar de inventar un número concreto. Fuente:
+// AEPD/colegios de abogacía — expedientes de clientes de abogados, mínimo 5
+// años desde la finalización de la relación (responsabilidad civil
+// profesional); hasta 10 años para documentación sujeta a normativa de
+// prevención de blanqueo de capitales; documentación fiscal/contable, 4-6
+// años.
+const RETENTION_PERIOD =
+  "el tiempo necesario para la finalidad del tratamiento y, posteriormente, durante los plazos de prescripción legalmente aplicables (con carácter general, un mínimo de 5 años desde la finalización de la relación profesional, pudiendo ampliarse según las obligaciones fiscales, contables o de prevención de blanqueo de capitales que resulten de aplicación)";
 // Contact point for exercising data-subject rights — now sourced from
 // `site-facts.ts` (`PRIMARY_EMAIL`) instead of a page-local literal, since it
 // is the same confirmed email used site-wide (footer, JSON-LD).
@@ -25,10 +35,9 @@ const DATA_RIGHTS_CONTACT = PRIMARY_EMAIL;
       role="alert"
       class="mt-4 rounded-md border border-error bg-error/10 px-4 py-3 text-sm text-error"
     >
-      Aviso: este documento es un borrador pendiente de revisión legal y de
-      confirmación por parte del cliente. No debe considerarse un texto legal
-      definitivo hasta que se resuelvan los marcadores de posición indicados a
-      continuación.
+      Aviso: este documento es un borrador pendiente de revisión legal final.
+      No debe considerarse un texto legal definitivo hasta que sea validado
+      por un profesional o asesoría legal.
     </p>
 
     <p class="mt-6">
