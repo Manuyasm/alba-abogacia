@@ -1,4 +1,39 @@
 services:
+  # The Astro site itself (output: "static" + @astrojs/node standalone
+  # adapter — see astro.config.mjs and AGENTS.md §3/§8). Talks to `cap` over
+  # the internal `cap-internal` network for the server-side /siteverify call
+  # in src/pages/api/contacto.ts — set CAP_API_URL to http://cap:3000 in
+  # production so that call never leaves the Docker network, while
+  # PUBLIC_CAP_API_URL still points browsers at the public, HTTPS-only,
+  # reverse-proxied Cap endpoint (per env.example's existing split).
+  app:
+    build:
+      context: .
+      args:
+        PUBLIC_CAP_API_URL: ${PUBLIC_CAP_API_URL:?PUBLIC_CAP_API_URL must be set}
+        PUBLIC_CAP_SITE_KEY: ${PUBLIC_CAP_SITE_KEY:?PUBLIC_CAP_SITE_KEY must be set}
+        PUBLIC_UMAMI_SCRIPT_URL: ${PUBLIC_UMAMI_SCRIPT_URL:-}
+        PUBLIC_UMAMI_WEBSITE_ID: ${PUBLIC_UMAMI_WEBSITE_ID:-}
+    container_name: alba-abogacia-app
+    environment:
+      CAP_API_URL: ${CAP_API_URL:?CAP_API_URL must be set}
+      CAP_SECRET_KEY: ${CAP_SECRET_KEY:?CAP_SECRET_KEY must be set}
+      CONTACT_RECIPIENT_EMAIL: ${CONTACT_RECIPIENT_EMAIL:?CONTACT_RECIPIENT_EMAIL must be set}
+      # MUST stay unset in production (src/pages/api/contacto.ts
+      # resolveEmailTransport()) — never set this in a real deployment.
+      CONTACT_EMAIL_TEST_MODE: ${CONTACT_EMAIL_TEST_MODE:-}
+    depends_on:
+      cap:
+        condition: service_started
+    networks:
+      - cap-internal
+    ports:
+      # Same convention as `cap` below: reach this only through a
+      # TLS-terminating reverse proxy (Traefik/Dokploy) in production, never
+      # expose it directly to the public internet.
+      - "4321:4321"
+    restart: unless-stopped
+
   # Self-hosted Cap CAPTCHA (https://capjs.js.org) — AGENTS.md §9.
   # Pinned to an explicit version, never `latest`, per the "no depender de `latest`
   # en producción" requirement.
