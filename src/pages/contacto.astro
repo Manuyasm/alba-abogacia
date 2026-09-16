@@ -6,14 +6,11 @@ import { OFFICES } from "@/lib/site-facts";
 // Langreo office address/phone are now sourced from `site-facts.ts` (single
 // source of truth, per design's "Contact-fact storage" decision) instead of
 // page-local constants — this page was the reason that module was created in
-// the first place. Colegiada number remains an unconfirmed client fact — a
-// named placeholder only, and stays page-local since it isn't a site-wide
-// fact in `site-facts.ts`. Madrid office (`OFFICES.madrid`) is also confirmed
-// but not yet shown on this page — adding the second office is a
-// page-content scope decision, not a mechanical placeholder fill, left for a
-// future change.
+// the first place. Client confirmed the colegiada number is not needed on
+// this page. Madrid office (`OFFICES.madrid`) is also confirmed but not yet
+// shown on this page — adding the second office is a page-content scope
+// decision, not a mechanical placeholder fill, left for a future change.
 const langreo = OFFICES.langreo;
-const COLEGIADA_NUMBER = "{{COLEGIADA_NUMBER}}";
 ---
 
 <BaseLayout
@@ -38,7 +35,6 @@ const COLEGIADA_NUMBER = "{{COLEGIADA_NUMBER}}";
           {langreo.phone}
         </a>
       </p>
-      <p class="mt-1">Colegiada n.º {COLEGIADA_NUMBER}</p>
     </address>
   </main>
 </BaseLayout>
