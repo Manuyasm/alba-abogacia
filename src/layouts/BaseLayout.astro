@@ -29,6 +29,16 @@ const {
   noindex = false,
 } = Astro.props;
 
+// Umami (self-hosted analytics, AGENTS.md §10 / DESIGN.md §9). Only rendered
+// when both are confirmed/configured — the same "never point at a broken
+// endpoint" convention `ContactForm.tsx`'s `buildCapWidgetEndpoint` uses for
+// Cap — so local dev/tests without these env vars set never load a script
+// pointed at nothing. `src/lib/analytics/umami.ts`'s `trackEvent()` already
+// no-ops when `window.umami` is absent, so omitting the tag here is also
+// safe on its own, not just belt-and-suspenders.
+const UMAMI_SCRIPT_URL = import.meta.env.PUBLIC_UMAMI_SCRIPT_URL;
+const UMAMI_WEBSITE_ID = import.meta.env.PUBLIC_UMAMI_WEBSITE_ID;
+
 // Organization/LegalService JSON-LD (spec: "Organization/LegalService
 // JSON-LD"). Only confirmed fields from `site-facts.ts` are encoded — never
 // a legal-entity name (`legalName` is intentionally never set; the legal
@@ -70,6 +80,11 @@ const organizationJsonLd = {
     <meta property="og:url" content={canonicalUrl} />
     {ogImage && <meta property="og:image" content={ogImage} />}
     <script is:inline type="application/ld+json" set:html={JSON.stringify(organizationJsonLd)} />
+    {
+      UMAMI_SCRIPT_URL && UMAMI_WEBSITE_ID && (
+        <script defer src={UMAMI_SCRIPT_URL} data-website-id={UMAMI_WEBSITE_ID} />
+      )
+    }
     <!-- Narrow ClientRouter adoption (spec: "Narrow ClientRouter Adoption";
          design decision #9). Native View Transitions for document
          navigation only — this project stays a static multi-page site, not

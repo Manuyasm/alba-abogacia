@@ -1,5 +1,5 @@
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import BaseLayout from "./BaseLayout.astro";
 
 // First `.astro` component test in the repo — uses Astro's experimental
@@ -86,5 +86,40 @@ describe("BaseLayout", () => {
     expect(jsonLd.address[1].streetAddress).toContain("Madrid");
     expect(jsonLd).not.toHaveProperty("legalName");
     expect(html).not.toContain("{{");
+  });
+
+  // AGENTS.md §10 / DESIGN.md §9: Umami is self-hosted, and its script must
+  // never point at a broken/unconfigured endpoint (same convention as
+  // ContactForm.tsx's buildCapWidgetEndpoint for Cap).
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("never renders the Umami script tag when its env vars are unset", async () => {
+    vi.stubEnv("PUBLIC_UMAMI_SCRIPT_URL", "");
+    vi.stubEnv("PUBLIC_UMAMI_WEBSITE_ID", "");
+
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(BaseLayout, {
+      props: { title: "Página de prueba" },
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    expect(html).not.toContain("data-website-id");
+  });
+
+  it("renders the Umami script tag with the configured script URL and website ID", async () => {
+    vi.stubEnv("PUBLIC_UMAMI_SCRIPT_URL", "https://umami.qreastech.com/script.js");
+    vi.stubEnv("PUBLIC_UMAMI_WEBSITE_ID", "test-website-id");
+
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(BaseLayout, {
+      props: { title: "Página de prueba" },
+      request: new Request("https://alba-abogacia.es/"),
+    });
+
+    expect(html).toContain('src="https://umami.qreastech.com/script.js"');
+    expect(html).toContain('data-website-id="test-website-id"');
+    expect(html).toMatch(/<script[^>]*defer[^>]*src="https:\/\/umami\.qreastech\.com\/script\.js"/);
   });
 });
