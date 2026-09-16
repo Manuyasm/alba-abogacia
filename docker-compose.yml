@@ -27,11 +27,15 @@ services:
         condition: service_started
     networks:
       - cap-internal
-    ports:
-      # Same convention as `cap` below: reach this only through a
-      # TLS-terminating reverse proxy (Traefik/Dokploy) in production, never
-      # expose it directly to the public internet.
-      - "4321:4321"
+    # No host `ports:` mapping — a reverse proxy (Dokploy's built-in Traefik,
+    # or your own) reaches this container over the Docker network directly
+    # and terminates TLS itself (AGENTS.md §9: "Publicar el endpoint solo
+    # mediante HTTPS", never expose a plaintext port straight to the
+    # internet). On Dokploy, configure this under the app's own "Domains"
+    # tab (container port 4321) instead of adding `ports:` here — publishing
+    # a host port here can collide with a port some other service on the
+    # same host already uses. Running under plain Docker/Portainer with no
+    # reverse proxy in front? Add back `ports: ["4321:4321"]` here.
     restart: unless-stopped
 
   # Self-hosted Cap CAPTCHA (https://capjs.js.org) — AGENTS.md §9.
@@ -51,12 +55,11 @@ services:
         condition: service_healthy
     networks:
       - cap-internal
-    ports:
-      # Exposed to the host only for local development / the reverse proxy to target.
-      # In production this port must be reached exclusively through a TLS-terminating
-      # reverse proxy (Traefik/Dokploy) per AGENTS.md §9 ("Publicar el endpoint solo
-      # mediante HTTPS") — never expose it directly to the public internet.
-      - "3000:3000"
+    # No host `ports:` mapping — same reasoning as `app` above: reached only
+    # through a reverse proxy over the Docker network (Dokploy: this
+    # service's own "Domains" tab, container port 3000), never a bare
+    # host-published port (AGENTS.md §9). Plain Docker/Portainer with no
+    # reverse proxy? Add back `ports: ["3000:3000"]` here.
     restart: unless-stopped
 
   # Valkey backs Cap's challenge/session storage. Kept as a separate, persistent
