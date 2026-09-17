@@ -1,0 +1,108 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { OFFICES, PRIMARY_EMAIL, SITE_NAME } from "@/lib/site-facts";
+
+// Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de la Información
+// y de Comercio Electrónico (LSSI-CE), art. 10 — required for any commercial
+// website, distinct from and in addition to `politica-privacidad.astro`'s
+// RGPD/LOPDGDD scope. For a lawyer specifically (regulated profession),
+// art. 10.1.e also requires disclosing the colegio profesional and número de
+// colegiado — that fact is a confirmed OPEN ITEM (not published anywhere,
+// including the current live site's own Aviso Legal), never invented here.
+const AVISO_LEGAL_DESCRIPTION =
+  "Aviso legal de ALBA Abogacía & Consulting: identificación del titular conforme a la Ley 34/2002 (LSSI-CE) y condiciones de acceso y uso del sitio web.";
+
+// Client-confirmed: NIF found published on the current live site's own
+// Aviso Legal (alba-abogacia.es/aviso-legal/) — a legitimate content-
+// migration source per AGENTS.md §2, not a new disclosure.
+const RESPONSIBLE_NAME = "Verónica Alba Suárez";
+const RESPONSIBLE_NIF = "76949152F";
+
+// OPEN ITEM: neither the bar association (colegio) nor the bar registration
+// number (número de colegiada) — mandatory under LSSI-CE art. 10.1.e for a
+// regulated profession — is published anywhere, including the current live
+// site. Never invented; left as an explicit pending fact instead of a
+// {{PLACEHOLDER}} token, matching politica-privacidad.astro's convention.
+const COLEGIO_PENDING = true;
+---
+
+<BaseLayout title={`Aviso legal | ${SITE_NAME}`} description={AVISO_LEGAL_DESCRIPTION} noindex>
+  <main id="main-content" class="mx-auto max-w-3xl px-4 py-16 text-ink" data-reveal>
+    <h1 class="font-heading text-3xl text-brand-brown">Aviso legal</h1>
+
+    <p role="alert" class="mt-4 rounded-md border border-error bg-error/10 px-4 py-3 text-sm text-error">
+      Aviso: este documento es un borrador pendiente de revisión legal final y de confirmación de los datos
+      colegiales indicados en el punto 2. No debe considerarse un texto legal definitivo hasta que sea validado
+      por un profesional o asesoría legal.
+    </p>
+
+    <p class="mt-6">
+      En cumplimiento del deber de información recogido en el artículo 10 de la Ley 34/2002, de 11 de julio, de
+      Servicios de la Sociedad de la Información y de Comercio Electrónico (LSSI-CE), se ponen a disposición de
+      las personas usuarias los siguientes datos.
+    </p>
+
+    <h2 class="mt-8 font-heading text-2xl text-brand-brown">1. Objeto</h2>
+    <p class="mt-2">
+      El presente aviso legal regula el uso del sitio web {SITE_NAME}. La navegación por este sitio implica la
+      aceptación de las condiciones aquí recogidas. Estas condiciones podrán ser modificadas sin aviso previo.
+    </p>
+
+    <h2 class="mt-8 font-heading text-2xl text-brand-brown">2. Identificación del titular</h2>
+    <ul class="mt-2 list-none space-y-1">
+      <li><strong>Nombre:</strong> {RESPONSIBLE_NAME}</li>
+      <li><strong>NIF:</strong> {RESPONSIBLE_NIF}</li>
+      <li>
+        <strong>Domicilio:</strong> {OFFICES.langreo.addressLines[0]}
+      </li>
+      <li><strong>Email:</strong> {PRIMARY_EMAIL}</li>
+      {
+        COLEGIO_PENDING && (
+          <li class="text-muted">
+            <strong>Colegio profesional y número de colegiada:</strong> pendiente de confirmar.
+          </li>
+        )
+      }
+    </ul>
+
+    <h2 class="mt-8 font-heading text-2xl text-brand-brown">3. Comunicaciones</h2>
+    <p class="mt-2">
+      Para cualquier comunicación con el titular del sitio, las personas usuarias pueden dirigirse a la dirección
+      de correo electrónico indicada en el punto anterior. Las comunicaciones remitidas por esta vía se
+      considerarán válidas y eficaces a todos los efectos.
+    </p>
+
+    <h2 class="mt-8 font-heading text-2xl text-brand-brown">4. Condiciones de acceso y uso</h2>
+    <p class="mt-2">
+      El acceso a este sitio web es libre y gratuito. Las personas usuarias se comprometen a hacer un uso
+      adecuado de los contenidos y servicios ofrecidos, y en particular a no emplearlos para:
+    </p>
+    <ul class="mt-2 list-disc space-y-1 pl-6">
+      <li>Difundir contenidos delictivos, violentos, pornográficos o contrarios a la ley o el orden público.</li>
+      <li>Introducir virus informáticos o realizar acciones que puedan dañar, alterar o inutilizar el sitio.</li>
+      <li>Intentar acceder a cuentas de otras personas usuarias sin autorización.</li>
+      <li>Vulnerar los derechos de propiedad intelectual o industrial del titular o de terceros.</li>
+      <li>Suplantar la identidad de otra persona.</li>
+    </ul>
+    <p class="mt-2">
+      Todos los contenidos del sitio (textos, imágenes, diseño y código) son propiedad del titular o se
+      utilizan con la autorización correspondiente. Las personas usuarias pueden visualizarlos y realizar
+      copias privadas, pero no distribuirlos ni reproducirlos sin autorización expresa.
+    </p>
+
+    <h2 class="mt-8 font-heading text-2xl text-brand-brown">5. Exclusión de responsabilidad</h2>
+    <p class="mt-2">
+      Los contenidos de este sitio web tienen carácter general e informativo, y no constituyen asesoramiento
+      jurídico ni financiero concreto. El titular no garantiza la disponibilidad continua del sitio ni se
+      responsabiliza de los daños derivados de fallos de acceso, de la presencia de virus u otros elementos
+      dañinos, ni del uso ilícito que las personas usuarias puedan hacer del sitio o de sus contenidos.
+    </p>
+
+    <h2 class="mt-8 font-heading text-2xl text-brand-brown">6. Legislación aplicable y jurisdicción</h2>
+    <p class="mt-2">
+      Las presentes condiciones se rigen por la legislación española. Para la resolución de cualquier
+      controversia derivada del acceso o uso de este sitio web, las partes se someten a los juzgados y
+      tribunales que resulten competentes conforme a la normativa aplicable.
+    </p>
+  </main>
+</BaseLayout>

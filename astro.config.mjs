@@ -55,9 +55,8 @@ export default defineConfig({
     react(),
     sitemap({
       serialize(item) {
-        return new URL(item.url).pathname.replace(/\/$/, "") === "/politica-privacidad"
-          ? undefined
-          : item;
+        const DRAFT_PATHS = ["/politica-privacidad", "/aviso-legal"];
+        return DRAFT_PATHS.includes(new URL(item.url).pathname.replace(/\/$/, "")) ? undefined : item;
       },
     }),
   ],
