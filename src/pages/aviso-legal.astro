@@ -1,10 +1,6 @@
 ---
-import { Image } from "astro:assets";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { OFFICES, PRIMARY_EMAIL, SITE_NAME } from "@/lib/site-facts";
-// Icon-only crop of the real client logo's symbol — decorative, precedes
-// the main <h1> (see Hero.astro's identical rationale comment).
-import logoIcon from "@/assets/brand/logo-icon.png";
 
 // Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de la Información
 // y de Comercio Electrónico (LSSI-CE), art. 10 — required for any commercial
@@ -32,10 +28,7 @@ const COLEGIO_PENDING = true;
 
 <BaseLayout title={`Aviso legal | ${SITE_NAME}`} description={AVISO_LEGAL_DESCRIPTION} noindex>
   <main id="main-content" class="mx-auto max-w-3xl px-4 py-16 text-ink" data-reveal>
-    <div class="flex items-center gap-3">
-      <Image src={logoIcon} alt="" class="h-8 w-8 shrink-0 sm:h-10 sm:w-10" widths={[32, 40]} />
-      <h1 class="font-heading text-3xl text-brand-brown">Aviso legal</h1>
-    </div>
+    <h1 class="font-heading text-3xl text-brand-brown">Aviso legal</h1>
 
     <p role="alert" class="mt-4 rounded-md border border-error bg-error/10 px-4 py-3 text-sm text-error">
       Aviso: este documento es un borrador pendiente de revisión legal final y de confirmación de los datos

@@ -48,9 +48,7 @@ describe("Hero", () => {
   // PR C ("Comprehensive Motion System v2"): the hero now wires in the
   // honest, generic placeholder photo landed in PR A (design decision #2/#3
   // — no real-person/real-place claim, must stay a single honestly-labeled
-  // photo, not a fabricated stock/stat visual). The decorative logo-icon
-  // image preceding the <h1> (alt="") is a real brand asset, not a stock
-  // photo — excluded from this count on purpose.
+  // image, not a fabricated stock/stat visual).
   it("renders exactly one honestly-labeled placeholder photo, no real-place/person claim", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Hero, {
@@ -58,12 +56,8 @@ describe("Hero", () => {
     });
 
     const imgMatches = html.match(/<img[^>]*>/g) ?? [];
-    // astro:assets' <Image> renders an empty `alt=""` as a bare `alt`
-    // attribute (no `=""`), so a non-empty-alt match is what actually
-    // distinguishes the photo from the decorative logo icon here.
-    const photoMatches = imgMatches.filter((img) => /\balt="[^"]+"/.test(img));
-    expect(photoMatches).toHaveLength(1);
-    expect(photoMatches[0]).toContain(
+    expect(imgMatches).toHaveLength(1);
+    expect(imgMatches[0]).toContain(
       'alt="Fotografía genérica de un despacho, usada como imagen provisional."',
     );
   });
