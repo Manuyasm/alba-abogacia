@@ -3,9 +3,10 @@ import { describe, expect, it } from "vitest";
 import TeamTeaser from "./TeamTeaser.astro";
 
 // Spec: "Team Teaser" — a `TeamCard` per confirmed team member with name and
-// generic role only (no bio, no photo), linking the teaser to `/el-despacho`.
-// Team names/roles (Verónica Alba Suárez — Abogada; Aitor Domínguez López —
-// Asesor financiero) are explicitly user-authorized for this change.
+// generic role only (no bio), linking the teaser to `/el-despacho`. Team
+// names/roles (Verónica Alba Suárez — Abogada; Aitor Domínguez López —
+// Asesor financiero) are explicitly user-authorized for this change. Photos
+// are the real headshots migrated from the current live site.
 describe("TeamTeaser", () => {
   it("renders exactly one h2 heading", async () => {
     const container = await AstroContainer.create();
@@ -33,7 +34,7 @@ describe("TeamTeaser", () => {
     expect(html).toContain("Asesor financiero");
   });
 
-  it("renders no bio text and no images for either card", async () => {
+  it("renders no bio text, and a real photo with a real alt for each card", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(TeamTeaser, {
       request: new Request("https://alba-abogacia.es/"),
@@ -45,10 +46,12 @@ describe("TeamTeaser", () => {
     expect(pMatches).toHaveLength(2);
 
     // Scoped to the <ul> of TeamCards: SectionHeading's decorative logo icon
-    // (alt="") above it is a real page image, unrelated to "no photo per
-    // card" — only the cards themselves must stay image-free.
+    // (alt="") above it is a real page image, unrelated to these 2 photos.
     const cardsSection = html.slice(html.indexOf("<ul"));
-    expect(cardsSection).not.toMatch(/<img/i);
+    expect(cardsSection).toContain('alt="Fotografía de Verónica Alba Suárez"');
+    expect(cardsSection).toContain('alt="Fotografía de Aitor Domínguez López"');
+    const imgMatches = cardsSection.match(/<img[^>]*>/g) ?? [];
+    expect(imgMatches).toHaveLength(2);
   });
 
   it("renders a link to /el-despacho", async () => {

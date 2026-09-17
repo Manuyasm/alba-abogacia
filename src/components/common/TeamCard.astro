@@ -1,21 +1,21 @@
 ---
 // Spec: "TeamCard Component" — renders a name and role with an appropriate
-// heading level for the name, and must render a safe placeholder with no
-// broken <img>/missing alt text when no photo prop is supplied. No real team
-// photos exist yet, so this component intentionally never accepts a photo
-// source prop — it always renders an initials placeholder. `photoAlt` is
-// accepted for forward compatibility with a future photo-carrying revision
-// of this component, but is unused today: since no <img> is ever rendered,
-// there is no alt text to attach it to, and the name is already conveyed by
-// the visible heading below.
+// heading level for the name. `photo` is optional: when omitted (no real
+// photo confirmed for that person), it falls back to a safe initials
+// placeholder with no broken <img>/missing alt text — never a fabricated
+// stock photo. When supplied, `photoAlt` is required alongside it so the
+// real photo always gets a real accessible name.
+import { Image } from "astro:assets";
+
 interface Props {
   name: string;
   role: string;
   bio?: string;
+  photo?: ImageMetadata;
   photoAlt?: string;
 }
 
-const { name, role, bio } = Astro.props;
+const { name, role, bio, photo, photoAlt } = Astro.props;
 
 const initials = name
   .split(/\s+/)
@@ -26,12 +26,18 @@ const initials = name
 ---
 
 <div class="flex flex-col gap-3 rounded-lg border border-border bg-paper p-6">
-  <span
-    aria-hidden="true"
-    class="flex h-16 w-16 items-center justify-center rounded-full bg-cream-deep font-heading text-lg font-semibold text-brand-brown"
-  >
-    {initials}
-  </span>
+  {
+    photo ? (
+      <Image src={photo} alt={photoAlt ?? name} class="h-16 w-16 rounded-full object-cover" width={64} height={64} />
+    ) : (
+      <span
+        aria-hidden="true"
+        class="flex h-16 w-16 items-center justify-center rounded-full bg-cream-deep font-heading text-lg font-semibold text-brand-brown"
+      >
+        {initials}
+      </span>
+    )
+  }
   <h3 class="font-heading text-lg font-semibold text-ink">{name}</h3>
   <p class="text-sm font-medium text-muted">{role}</p>
   {bio && <p class="text-sm text-muted">{bio}</p>}

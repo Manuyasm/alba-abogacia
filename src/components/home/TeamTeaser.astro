@@ -1,18 +1,22 @@
 ---
 // Spec: "Team Teaser" — a `TeamCard` per confirmed team member with name and
-// generic role only (no bio, no photo), linking the teaser to `/el-despacho`.
-// Design: page-specific literal copy, no props (single consumer, same
-// rationale as `Hero.astro`/`ServicesSummary.astro`). Team names/roles
-// (Verónica Alba Suárez — Abogada; Aitor Domínguez López — Asesor
-// financiero) are explicitly user-authorized for this change — do not
-// re-flag or defer. No `bio`/photo prop is passed: `TeamCard` has no photo
-// prop at all today, and omitting `bio` keeps this teaser bio-free per spec.
+// generic role only (no bio), linking the teaser to `/el-despacho`. Design:
+// page-specific literal copy, no props (single consumer, same rationale as
+// `Hero.astro`/`ServicesSummary.astro`). Team names/roles (Verónica Alba
+// Suárez — Abogada; Aitor Domínguez López — Asesor financiero) are
+// explicitly user-authorized for this change — do not re-flag or defer.
+// Photos: the same real headshots published on the current live site's
+// "Sobre nosotros" page (legitimate content-migration source, AGENTS.md
+// §2) — never a fabricated/stock photo. No `bio` prop is passed: omitting
+// it keeps this teaser bio-free per spec.
 import TeamCard from "@/components/common/TeamCard.astro";
 import SectionHeading from "@/components/common/SectionHeading.astro";
+import veronicaPhoto from "@/assets/team/veronica.jpg";
+import aitorPhoto from "@/assets/team/aitor.jpg";
 
 const TEAM = [
-  { name: "Verónica Alba Suárez", role: "Abogada" },
-  { name: "Aitor Domínguez López", role: "Asesor financiero" },
+  { name: "Verónica Alba Suárez", role: "Abogada", photo: veronicaPhoto },
+  { name: "Aitor Domínguez López", role: "Asesor financiero", photo: aitorPhoto },
 ];
 ---
 
@@ -22,7 +26,12 @@ const TEAM = [
     {
       TEAM.map((member, index) => (
         <li data-reveal="stagger" style={`--reveal-delay:${index * 70}ms`}>
-          <TeamCard name={member.name} role={member.role} />
+          <TeamCard
+            name={member.name}
+            role={member.role}
+            photo={member.photo}
+            photoAlt={`Fotografía de ${member.name}`}
+          />
         </li>
       ))
     }

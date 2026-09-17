@@ -5,6 +5,11 @@ import OfficeCard from "@/components/common/OfficeCard.astro";
 import FaqAccordion from "@/components/common/FaqAccordion.astro";
 import SectionHeading from "@/components/common/SectionHeading.astro";
 import { OFFICES, SITE_NAME } from "@/lib/site-facts";
+// Same real headshots migrated from the current live site's "Sobre
+// nosotros" page (legitimate content-migration source, AGENTS.md §2) as
+// TeamTeaser.astro — never a fabricated/stock photo.
+import veronicaPhoto from "@/assets/team/veronica.jpg";
+import aitorPhoto from "@/assets/team/aitor.jpg";
 
 // Spec: "Page Existence", "Philosophy/Intro Section", "Team Profiles",
 // "Offices Section", "El Despacho FAQ", "Closing CTA", "No Garantías/
@@ -46,11 +51,13 @@ const TEAM = [
     name: "Verónica Alba Suárez",
     role: "Abogada",
     bio: "La dirección del bufete jurídico corresponde a la Abogada Verónica Alba Suárez, con casi 20 años de experiencia profesional en litigios y solución extrajudicial de asuntos. Se especializa en derecho familiar y de menores, asuntos hereditarios y sus impuestos, derecho laboral y de Seguridad Social, contratos comerciales y gestión extrajudicial de conflictos. Su enfoque detallado y estratégico, desde la perspectiva de la prevención y sostenibilidad en el tiempo, garantizan que cada caso se maneje con la máxima profesionalidad y rigor.",
+    photo: veronicaPhoto,
   },
   {
     name: "Aitor Domínguez López",
     role: "Asesor financiero",
     bio: "La consultoría financiera viene de la mano de Aitor Domínguez López, asesor financiero con más de 10 años de experiencia en planificación financiera y gestión de riesgos. Ha ayudado a numerosos particulares y empresas a optimizar sus recursos y alcanzar sus objetivos financieros, desde la planificación y la constancia. Su capacidad para analizar y prever las tendencias económicas, lo convierte en un valioso recurso para nuestros clientes.",
+    photo: aitorPhoto,
   },
 ];
 
@@ -168,7 +175,13 @@ const primaryCtaClasses =
         {
           TEAM.map((member, index) => (
             <li data-reveal="stagger" style={`--reveal-delay:${index * 70}ms`}>
-              <TeamCard name={member.name} role={member.role} bio={member.bio} />
+              <TeamCard
+                name={member.name}
+                role={member.role}
+                bio={member.bio}
+                photo={member.photo}
+                photoAlt={`Fotografía de ${member.name}`}
+              />
             </li>
           ))
         }
