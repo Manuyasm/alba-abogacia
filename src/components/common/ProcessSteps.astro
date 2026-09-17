@@ -3,6 +3,7 @@
 // time-bound SLA claims or guarantees. Design: page-specific literal copy, no
 // props (single consumer, same rationale as `Hero.astro`). No response-time
 // promise or closed-quote guarantee is stated anywhere in this copy.
+import SectionHeading from "./SectionHeading.astro";
 const STEPS = [
   {
     title: "Consulta inicial",
@@ -21,7 +22,7 @@ const STEPS = [
 ---
 
 <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
-  <h2 class="font-heading text-3xl font-semibold text-brand-brown">Cómo trabajamos</h2>
+  <SectionHeading>Cómo trabajamos</SectionHeading>
   <ol class="mt-8 grid gap-6 sm:grid-cols-3">
     {
       STEPS.map((step) => (

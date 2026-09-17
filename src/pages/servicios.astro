@@ -4,6 +4,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 import ServiceDetailCard from "@/components/common/ServiceDetailCard.astro";
 import ProcessSteps from "@/components/common/ProcessSteps.astro";
 import FaqAccordion from "@/components/common/FaqAccordion.astro";
+import SectionHeading from "@/components/common/SectionHeading.astro";
 import { SITE_NAME } from "@/lib/site-facts";
 // Icon-only crop of the real client logo's symbol — decorative, precedes
 // the main <h1> (see Hero.astro's identical rationale comment).
@@ -143,7 +144,7 @@ const jumpLinkClasses =
     </section>
 
     <section id="area-juridica" class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-left">
-      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Asesoría legal</h2>
+      <SectionHeading>Asesoría legal</SectionHeading>
       <p class="mt-4 max-w-2xl text-muted">
         Nuestro equipo de abogados expertos está dedicado a proporcionar soluciones legales efectivas y personalizadas para una variedad de necesidades.
       </p>
@@ -162,7 +163,7 @@ const jumpLinkClasses =
     </section>
 
     <section id="area-financiera" class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-right">
-      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Consultoría financiera</h2>
+      <SectionHeading>Consultoría financiera</SectionHeading>
       <p class="mt-4 max-w-2xl text-muted">
         Ofrecemos servicios de consultoría financiera para ayudarle a gestionar sus recursos de manera eficiente y alcanzar sus objetivos financieros.
       </p>
@@ -183,7 +184,7 @@ const jumpLinkClasses =
     <ProcessSteps />
 
     <section class="mx-auto max-w-3xl px-4 py-16">
-      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Preguntas frecuentes</h2>
+      <SectionHeading>Preguntas frecuentes</SectionHeading>
       <!-- FaqAccordion already wraps itself in its own `data-reveal` div —
            no `data-reveal` is added here to avoid double-nesting it. -->
       <div class="mt-8">
@@ -192,7 +193,7 @@ const jumpLinkClasses =
     </section>
 
     <section class="mx-auto max-w-3xl px-4 py-16" data-reveal="fade-up">
-      <h2 class="font-heading text-3xl font-semibold text-brand-brown">¿Necesita asesoramiento?</h2>
+      <SectionHeading>¿Necesita asesoramiento?</SectionHeading>
       <p class="mt-4 text-muted">
         Cuéntenos su situación y le indicaremos cómo podemos ayudarle, tanto en el ámbito jurídico como en el
         financiero.

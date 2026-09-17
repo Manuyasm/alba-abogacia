@@ -43,7 +43,12 @@ describe("TeamTeaser", () => {
     // 2 cards with no bio means exactly 2 <p> tags total.
     const pMatches = html.match(/<p[\s>]/g) ?? [];
     expect(pMatches).toHaveLength(2);
-    expect(html).not.toMatch(/<img/i);
+
+    // Scoped to the <ul> of TeamCards: SectionHeading's decorative logo icon
+    // (alt="") above it is a real page image, unrelated to "no photo per
+    // card" — only the cards themselves must stay image-free.
+    const cardsSection = html.slice(html.indexOf("<ul"));
+    expect(cardsSection).not.toMatch(/<img/i);
   });
 
   it("renders a link to /el-despacho", async () => {

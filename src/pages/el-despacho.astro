@@ -4,6 +4,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 import TeamCard from "@/components/common/TeamCard.astro";
 import OfficeCard from "@/components/common/OfficeCard.astro";
 import FaqAccordion from "@/components/common/FaqAccordion.astro";
+import SectionHeading from "@/components/common/SectionHeading.astro";
 import { OFFICES, SITE_NAME } from "@/lib/site-facts";
 // Icon-only crop of the real client logo's symbol — decorative, precedes
 // the main <h1> (see Hero.astro's identical rationale comment).
@@ -163,12 +164,12 @@ const primaryCtaClasses =
     </section>
 
     <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
-      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Nuestra historia</h2>
+      <SectionHeading>Nuestra historia</SectionHeading>
       <p class="mt-4 max-w-2xl text-lg text-muted">{HISTORY_TEXT}</p>
     </section>
 
     <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
-      <h2 class="font-heading text-3xl font-semibold text-brand-brown">El equipo</h2>
+      <SectionHeading>El equipo</SectionHeading>
       <p class="mt-4 max-w-2xl text-lg text-muted">{TEAM_INTRO}</p>
       <ul class="mt-8 grid gap-6 sm:grid-cols-2">
         {
@@ -182,7 +183,7 @@ const primaryCtaClasses =
     </section>
 
     <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
-      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Nuestros Valores</h2>
+      <SectionHeading>Nuestros Valores</SectionHeading>
       <ul class="mt-8 grid gap-6 sm:grid-cols-2">
         {
           VALUES.map((value, index) => (
@@ -196,7 +197,7 @@ const primaryCtaClasses =
     </section>
 
     <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
-      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Dónde estamos</h2>
+      <SectionHeading>Dónde estamos</SectionHeading>
       <ul class="mt-8 grid gap-6 sm:grid-cols-2">
         <li data-reveal="stagger" style="--reveal-delay:0ms">
           <OfficeCard {...OFFICES.langreo} mapNote={OFFICE_MAP_NOTE} />
@@ -208,7 +209,7 @@ const primaryCtaClasses =
     </section>
 
     <section class="mx-auto max-w-3xl px-4 py-16">
-      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Preguntas frecuentes</h2>
+      <SectionHeading>Preguntas frecuentes</SectionHeading>
       <!-- FaqAccordion already wraps itself in its own `data-reveal` div —
            no `data-reveal` is added here to avoid double-nesting it. -->
       <div class="mt-8">
@@ -217,7 +218,7 @@ const primaryCtaClasses =
     </section>
 
     <section class="mx-auto max-w-3xl px-4 py-16" data-reveal="fade-up">
-      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Hablemos de su situación</h2>
+      <SectionHeading>Hablemos de su situación</SectionHeading>
       <p class="mt-4 text-muted">
         Cuéntenos su situación a través del formulario de contacto y le indicaremos cómo podemos ayudarle.
       </p>

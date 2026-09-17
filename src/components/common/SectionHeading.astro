@@ -1,0 +1,19 @@
+---
+// Shared wrapper for every major section <h2> (16 consumers across Home,
+// Servicios, and El despacho — same "logo delante de los títulos" ask that
+// placed the icon before each page's <h1>). Extracted rather than repeated
+// inline: at this many consumers, hand-copying the icon+h2 markup would be
+// real drift risk if the icon sizing/spacing ever needs to change.
+// Deliberately NOT used for politica-privacidad.astro/aviso-legal.astro's
+// smaller, plain (non-bold) numbered clause headings — those are a
+// different, denser heading style, not a "principal" section title.
+import { Image } from "astro:assets";
+import logoIcon from "@/assets/brand/logo-icon.png";
+---
+
+<div class="flex items-center gap-3">
+  <Image src={logoIcon} alt="" class="h-7 w-7 shrink-0 sm:h-8 sm:w-8" widths={[28, 32]} />
+  <h2 class="font-heading text-3xl font-semibold text-brand-brown">
+    <slot />
+  </h2>
+</div>

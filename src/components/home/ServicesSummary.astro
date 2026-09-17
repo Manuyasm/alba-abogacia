@@ -6,6 +6,7 @@
 // problem-oriented sentence — no procedural/pricing/timing claims copied
 // from any mockup.
 import ServiceCard from "@/components/common/ServiceCard.astro";
+import SectionHeading from "@/components/common/SectionHeading.astro";
 
 const SERVICES = [
   {
@@ -36,7 +37,7 @@ const SERVICES = [
 ---
 
 <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
-  <h2 class="font-heading text-3xl font-semibold text-brand-brown">Nuestros servicios</h2>
+  <SectionHeading>Nuestros servicios</SectionHeading>
   <ul class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
     {
       SERVICES.map((service, index) => (

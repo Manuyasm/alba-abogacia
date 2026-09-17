@@ -7,6 +7,7 @@ import TeamTeaser from "@/components/home/TeamTeaser.astro";
 import ProcessSteps from "@/components/common/ProcessSteps.astro";
 import OfficeCard from "@/components/common/OfficeCard.astro";
 import FaqAccordion from "@/components/common/FaqAccordion.astro";
+import SectionHeading from "@/components/common/SectionHeading.astro";
 import { OFFICES, SITE_NAME } from "@/lib/site-facts";
 
 // Spec: full Home page composition ("Hero Section" through "Contact
@@ -57,7 +58,7 @@ const FAQ_ITEMS = [
     <ProcessSteps />
 
     <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
-      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Nuestras oficinas</h2>
+      <SectionHeading>Nuestras oficinas</SectionHeading>
       <ul class="mt-8 grid gap-6 sm:grid-cols-2">
         <li data-reveal="stagger" style="--reveal-delay:0ms"><OfficeCard {...OFFICES.langreo} /></li>
         <li data-reveal="stagger" style="--reveal-delay:70ms"><OfficeCard {...OFFICES.madrid} /></li>
@@ -65,7 +66,7 @@ const FAQ_ITEMS = [
     </section>
 
     <section class="mx-auto max-w-3xl px-4 py-16">
-      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Preguntas frecuentes</h2>
+      <SectionHeading>Preguntas frecuentes</SectionHeading>
       <!-- FaqAccordion already wraps itself in its own `data-reveal` div —
            no `data-reveal` is added here to avoid double-nesting it. -->
       <div class="mt-8">
@@ -74,7 +75,7 @@ const FAQ_ITEMS = [
     </section>
 
     <section id="contacto" class="mx-auto max-w-3xl px-4 py-16" data-reveal="fade-up">
-      <h2 class="font-heading text-3xl font-semibold text-brand-brown">Solicite su consulta</h2>
+      <SectionHeading>Solicite su consulta</SectionHeading>
       <p class="mt-4 text-muted">
         Cuéntenos su situación a través del siguiente formulario y nos pondremos en contacto con usted.
       </p>
