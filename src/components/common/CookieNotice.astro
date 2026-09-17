@@ -1,0 +1,94 @@
+---
+// Preventive privacy notice — the site does not use any cookies today (no
+// app cookies, self-hosted Cap has none, self-hosted Umami is cookie-less by
+// design; see `politica-privacidad.astro`). This is NOT a cookie-consent
+// gate: there is nothing non-exempt to consent to under LSSI-CE art. 22.2,
+// so it never blocks or conditions anything (`src/lib/analytics/umami.ts`'s
+// `loadAnalytics()` stays ungated). It exists purely so a future addition
+// that DOES need consent has a visible, already-in-place place to ask for
+// it — the copy states today's real, honest state, never a fabricated
+// cookie-acceptance choice.
+//
+// Dismissal is remembered in `localStorage` (not a cookie) — storing the
+// user's own choice about this exact notice is itself the kind of strictly
+// necessary storage LSSI-CE art. 22.2 exempts from consent.
+// Server-rendered `hidden` by default: whether to show it depends entirely
+// on a client-only check (has this browser dismissed it before?), so
+// there's no correct server-rendered default that wouldn't either flash
+// visible-then-hidden for returning visitors or require a head-blocking
+// script. The inline script below is the only thing that ever reveals it —
+// a deliberate exception to this project's usual progressive-enhancement
+// default, since the notice's entire purpose (remember a dismissal) is
+// already JS-dependent regardless.
+const DISMISSED_STORAGE_KEY = "cookie-notice-dismissed";
+---
+
+<div
+  id="cookie-notice"
+  role="region"
+  aria-label="Aviso de privacidad"
+  hidden
+  class="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-paper px-4 py-4 shadow-[0_-2px_12px_-4px_rgb(0_0_0_/_0.12)]"
+>
+  <div class="mx-auto flex max-w-6xl flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <p class="text-sm text-muted">
+      Este sitio no utiliza cookies de seguimiento ni de publicidad. Puede consultar el detalle en nuestra{" "}
+      <a href="/politica-privacidad" class="underline underline-offset-2 text-brand-red hover:text-brand-red-dark">
+        política de privacidad
+      </a>.
+    </p>
+    <button
+      type="button"
+      id="cookie-notice-dismiss"
+      class="inline-flex min-h-[44px] w-full items-center justify-center rounded-md bg-brand-red px-5 py-2 text-sm font-semibold text-paper transition-interactive motion-reduce:transition-none hover:bg-brand-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red sm:w-auto"
+    >
+      Entendido
+    </button>
+  </div>
+</div>
+
+<script is:inline define:vars={{ DISMISSED_STORAGE_KEY }}>
+  function initCookieNotice() {
+    const notice = document.getElementById("cookie-notice");
+    const dismissButton = document.getElementById("cookie-notice-dismiss");
+    if (!notice || !dismissButton) {
+      return;
+    }
+
+    let alreadyDismissed = false;
+    try {
+      alreadyDismissed = window.localStorage.getItem(DISMISSED_STORAGE_KEY) === "true";
+    } catch {
+      // Private browsing / blocked storage: fail open (keep the notice
+      // visible) rather than throw.
+    }
+
+    if (alreadyDismissed) {
+      notice.hidden = true;
+      return;
+    }
+
+    notice.hidden = false;
+
+    // ClientRouter's morph transition can preserve this exact button node
+    // across a client-side navigation (byte-identical markup) rather than
+    // replacing it — a re-fired `astro:page-load` would then stack a
+    // second listener on the SAME node (design decision #9's documented
+    // double-bind risk). Guard with a flag instead of assuming a fresh node.
+    if (dismissButton.dataset.bound === "true") {
+      return;
+    }
+    dismissButton.dataset.bound = "true";
+
+    dismissButton.addEventListener("click", () => {
+      notice.hidden = true;
+      try {
+        window.localStorage.setItem(DISMISSED_STORAGE_KEY, "true");
+      } catch {
+        // Best-effort only — the notice still hides for this page view.
+      }
+    });
+  }
+
+  document.addEventListener("astro:page-load", initCookieNotice);
+</script>

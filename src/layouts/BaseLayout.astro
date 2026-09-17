@@ -4,6 +4,7 @@ import { ClientRouter } from "astro:transitions";
 import { BRAND_NAME, OFFICES, PRIMARY_EMAIL } from "@/lib/site-facts";
 import SiteHeader from "@/components/common/SiteHeader.astro";
 import SiteFooter from "@/components/common/SiteFooter.astro";
+import CookieNotice from "@/components/common/CookieNotice.astro";
 
 interface Props {
   title: string;
@@ -102,6 +103,7 @@ const organizationJsonLd = {
     <SiteHeader />
     <slot />
     <SiteFooter />
+    <CookieNotice />
     <script>
       import { initScrollReveal } from "@/lib/motion/scroll-reveal";
       import { initHeaderScroll } from "@/lib/motion/header-scroll";
