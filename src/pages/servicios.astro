@@ -1,9 +1,13 @@
 ---
+import { Image } from "astro:assets";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import ServiceDetailCard from "@/components/common/ServiceDetailCard.astro";
 import ProcessSteps from "@/components/common/ProcessSteps.astro";
 import FaqAccordion from "@/components/common/FaqAccordion.astro";
 import { SITE_NAME } from "@/lib/site-facts";
+// Icon-only crop of the real client logo's symbol — decorative, precedes
+// the main <h1> (see Hero.astro's identical rationale comment).
+import logoIcon from "@/assets/brand/logo-icon.png";
 
 const SERVICIOS_DESCRIPTION =
   "Servicios de asesoría legal y consultoría financiera.";
@@ -122,9 +126,12 @@ const jumpLinkClasses =
 <BaseLayout title={`Servicios | ${SITE_NAME}`} description={SERVICIOS_DESCRIPTION}>
   <main id="main-content" class="overflow-x-hidden">
     <section class="mx-auto max-w-6xl px-4 py-16" data-reveal="fade-up">
-      <h1 class="font-heading text-4xl font-semibold text-brand-brown sm:text-5xl">
-        Servicios jurídicos y de consultoría financiera
-      </h1>
+      <div class="flex items-center gap-3">
+        <Image src={logoIcon} alt="" class="h-10 w-10 shrink-0 sm:h-12 sm:w-12" widths={[40, 48]} />
+        <h1 class="font-heading text-4xl font-semibold text-brand-brown sm:text-5xl">
+          Servicios jurídicos y de consultoría financiera
+        </h1>
+      </div>
       <p class="mt-4 max-w-2xl text-lg text-muted">
         En Alba Abogacía &amp; Consulting combinamos asesoramiento jurídico y consultoría financiera para
         acompañarle en cada etapa de su situación, ya sea personal o empresarial.

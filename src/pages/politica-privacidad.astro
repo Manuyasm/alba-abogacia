@@ -1,6 +1,10 @@
 ---
+import { Image } from "astro:assets";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { PRIMARY_EMAIL } from "@/lib/site-facts";
+// Icon-only crop of the real client logo's symbol — decorative, precedes
+// the main <h1> (see Hero.astro's identical rationale comment).
+import logoIcon from "@/assets/brand/logo-icon.png";
 
 // RGPD (UE) 2016/679 / LOPDGDD 3/2018 — borrador pendiente de revisión legal
 // final antes de publicación (spec: la casilla de consentimiento del
@@ -29,7 +33,10 @@ const DATA_RIGHTS_CONTACT = PRIMARY_EMAIL;
 
 <BaseLayout title="Política de privacidad — ALBA Abogacía & Consulting" noindex>
   <main id="main-content" class="mx-auto max-w-3xl px-4 py-16 text-ink" data-reveal>
-    <h1 class="font-heading text-3xl text-brand-brown">Política de privacidad</h1>
+    <div class="flex items-center gap-3">
+      <Image src={logoIcon} alt="" class="h-8 w-8 shrink-0 sm:h-10 sm:w-10" widths={[32, 40]} />
+      <h1 class="font-heading text-3xl text-brand-brown">Política de privacidad</h1>
+    </div>
 
     <p
       role="alert"
