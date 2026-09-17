@@ -45,11 +45,10 @@ describe("Hero", () => {
     expect(htmlWithoutImageTags).not.toMatch(/\d+\s*años/i);
   });
 
-  // PR C ("Comprehensive Motion System v2"): the hero now wires in the
-  // honest, generic placeholder photo landed in PR A (design decision #2/#3
-  // — no real-person/real-place claim, must stay a single honestly-labeled
-  // image, not a fabricated stock/stat visual).
-  it("renders exactly one honestly-labeled placeholder photo, no real-place/person claim", async () => {
+  // The real office banner photo (client-provided) replaced PR A's generic
+  // placeholder — still exactly one honestly-labeled image, no fabricated
+  // stock/stat visual.
+  it("renders exactly one honestly-labeled office photo", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Hero, {
       request: new Request("https://alba-abogacia.es/"),
@@ -57,9 +56,7 @@ describe("Hero", () => {
 
     const imgMatches = html.match(/<img[^>]*>/g) ?? [];
     expect(imgMatches).toHaveLength(1);
-    expect(imgMatches[0]).toContain(
-      'alt="Fotografía genérica de un despacho, usada como imagen provisional."',
-    );
+    expect(imgMatches[0]).toContain('alt="Despacho de ALBA Abogacía &amp; Consulting."');
   });
 
   // PR C: entrance fires on page LOAD, not on scroll — a dedicated CSS
